@@ -186,6 +186,7 @@ int            semdown(int sem_id);
 int            semfree(int sem_id);
 int            semget(int sem_id, int init_value);
 int            semup(int sem_id);
+int            semvalue(int sem_id);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

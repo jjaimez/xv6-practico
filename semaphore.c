@@ -75,3 +75,12 @@ int semup(int sem_id){
 	stable.semaphore[sem_id].value++;
 	return 0;
 }
+
+
+//return the value of the semaphore
+int semvalue(int sem_id){
+	return stable.semaphore[sem_id].value;
+
+
+
+}

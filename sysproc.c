@@ -161,11 +161,14 @@ sys_semdown(void){ //int sem_id
   int sem_id;
   if(argint(0, &sem_id) < 0)
       return -4;
+    //acquire(&stable.lock);
   int i = 0;  
   while (i < MAXSEMPROC){
     if (proc->sem[i] == sem_id){
-      if (semdown(sem_id) == 1){
-        wait();
+      while(semvalue(sem_id)==0){
+        if (semdown(sem_id) == 1){
+          //sleep(proc->chan, &stable.lock); //necesito bloquear la tabla del semaforo que 
+        }//esta en semaphore.c
       }
       return 0;
     }
@@ -190,5 +193,22 @@ sys_semup(void){ //int sem_id
     }
     i++;
   }  
+  return -1;
+}
+
+
+//return the  value of the semaphore
+int
+sys_semvalue(void){ //int sem_id
+  int sem_id;
+  if(argint(0, &sem_id) < 0)
+      return -1;
+  int i = 0;  
+  while (i < MAXSEMPROC){
+    if (proc->sem[i] == sem_id){
+      return semvalue(sem_id);
+    }
+  i++;
+  }
   return -1;
 }
