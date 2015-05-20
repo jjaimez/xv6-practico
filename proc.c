@@ -242,6 +242,7 @@ exit(void)
   end_op();
   proc->cwd = 0;
   int i;
+  
   //release all the semaphores.
   for(i = 0; i < proc->squantity; i++){   
     semfree(proc->sem[i]);

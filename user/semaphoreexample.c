@@ -3,7 +3,7 @@
 #include "user.h"
 #include "fcntl.h"
 
-#define N  2
+#define N  3
 
 
 //void task(int pid) {
@@ -18,7 +18,7 @@
 void task (int s, int pid, char path[]){
   int i,k,fd;
   for(i = 0; i < 5; i++){
-    semdown(s);
+    //semdown(s);
     fd = open(path, O_RDWR);
     read(fd, &k, sizeof(k)); //read
     close(fd);
@@ -27,7 +27,7 @@ void task (int s, int pid, char path[]){
     fd = open(path, O_RDWR);
     write(fd, &k, sizeof(k));
     close(fd);
-    semup(s);   
+    //semup(s);   
   }
 }
 
@@ -44,12 +44,15 @@ int s,pid,n,k,fd;
   close(fd);
   for(n=0; n<N; n++){
     pid = fork(); 
-    if(pid>0)
-      task(s,pid,path); 
+    if(pid == 0){
+      task(s,getpid(),path);
+      exit();
+    }       
   }
 
- while(1==1)
+  for(n=0; n<N; n++){
+    wait();
+  }
 
-  wait();
   exit();
 }

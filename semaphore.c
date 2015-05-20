@@ -8,12 +8,6 @@
 #include "spinlock.h"
 #include "semaphore.h"
 
-struct {
-	struct semaphore semaphore[MAXSEM];
-	struct spinlock lock;
-	unsigned short quantity; //quantity of actives semaphores
-} stable;
-
 
 /*Create or obtain a descriptor of a semaphore.
 parameters:
@@ -33,55 +27,44 @@ int semget(int sem_id, int init_value){
 				stable.semaphore[i].refcount = 1;
 				stable.quantity++;
 				return i;
-			} else{
-				++i;
-			}
+			} else
+				++i;		
 		}
+		return -3;
 	} else {
-		if (stable.semaphore[sem_id].refcount == 0){
+		if (stable.semaphore[sem_id].refcount == 0)
 			return -1;
-		}
-		stable.semaphore[sem_id].refcount++;		
-	}
-	return 0;
+		stable.semaphore[sem_id].refcount++;			
+		return 0;
+	}	
 }
 
 
 /*Releases the semaphore.
 Return -1 on error (not semaphore obtained by the process). Zero otherwise*/
 int semfree(int sem_id){
-	if (stable.semaphore[sem_id].refcount == 0){
+	if (stable.semaphore[sem_id].refcount == 0)
 		return -1;
-	}
+	acquire(&stable.lock);
 	stable.semaphore[sem_id].refcount--;
+	if (stable.semaphore[sem_id].refcount == 0)
+		stable.quantity--;
+	release(&stable.lock);
 	return 0;
 }
 
 //decrease the unit value of the semaphore
-// 0 all okey.
-// 1 block
 int semdown(int sem_id){
-	if (stable.semaphore[sem_id].value == 0){ //ACA IRIA EL WHILE Y EL LOCK
-		return 1;
-	} 
 	stable.semaphore[sem_id].value--;
 	return 0;
 }
 
 //Increase the unit value of the semaphore
 int semup(int sem_id){
-	if (stable.semaphore[sem_id].refcount == 0){
+	if (stable.semaphore[sem_id].refcount == 0)
 		return -1;
-	}
+	acquire(&stable.lock);
 	stable.semaphore[sem_id].value++;
+	release(&stable.lock);
 	return 0;
-}
-
-
-//return the value of the semaphore
-int semvalue(int sem_id){
-	return stable.semaphore[sem_id].value;
-
-
-
 }
