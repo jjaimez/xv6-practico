@@ -199,6 +199,13 @@ fork(void)
 
   safestrcpy(np->name, proc->name, sizeof(proc->name));
  
+  //inherits all the semaphores.
+  for(i = 0; i < proc->squantity; i++){
+    np->sem[i] = proc->sem[i];
+    semget(proc->sem[i],0);
+  }
+  np->squantity = proc->squantity;
+
   pid = np->pid;
 
   // lock to force the compiler to emit the np->state write last.
@@ -234,6 +241,12 @@ exit(void)
   iput(proc->cwd);
   end_op();
   proc->cwd = 0;
+  int i;
+  //release all the semaphores.
+  for(i = 0; i < proc->squantity; i++){   
+    semfree(proc->sem[i]);
+  }
+  proc->squantity = 0;
 
   acquire(&ptable.lock);
 
@@ -471,6 +484,7 @@ kill(int pid)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
+
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING){
         p->state = RUNNABLE;

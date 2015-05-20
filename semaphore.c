@@ -40,7 +40,8 @@ int semget(int sem_id, int init_value){
 	} else {
 		if (stable.semaphore[sem_id].refcount == 0){
 			return -1;
-		}		
+		}
+		stable.semaphore[sem_id].refcount++;		
 	}
 	return 0;
 }
@@ -60,7 +61,7 @@ int semfree(int sem_id){
 // 0 all okey.
 // 1 block
 int semdown(int sem_id){
-	if (stable.semaphore[sem_id].value == 0){
+	if (stable.semaphore[sem_id].value == 0){ //ACA IRIA EL WHILE Y EL LOCK
 		return 1;
 	} 
 	stable.semaphore[sem_id].value--;
