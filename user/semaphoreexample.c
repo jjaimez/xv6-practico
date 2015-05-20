@@ -5,32 +5,24 @@
 
 #define N  3
 
-
-//void task(int pid) {
-//  int i,j;
-//  for (i=0; i<1000; i++){
-//	  semdown(s);
-//      k++;
-//	  semup(s);
-//	}
-//}
-
-void task (int s, int pid, char path[]){
+//add five in a file
+void adder (int s, int pid, char path[]){
   int i,k,fd;
   for(i = 0; i < 5; i++){
-    //semdown(s);
+    semdown(s);
     fd = open(path, O_RDWR);
-    read(fd, &k, sizeof(k)); //read
+    read(fd, &k, sizeof(k)); 
     close(fd);
     k=k+1;
     printf(1," k=%d pid= %d \n",k,pid); 
     fd = open(path, O_RDWR);
     write(fd, &k, sizeof(k));
     close(fd);
-    //semup(s);   
+    semup(s);   
   }
 }
 
+//create N childs and each one call adder
 int
 main(int argc, char *argv[])
 {
@@ -45,7 +37,8 @@ int s,pid,n,k,fd;
   for(n=0; n<N; n++){
     pid = fork(); 
     if(pid == 0){
-      task(s,getpid(),path);
+      adder(s,getpid(),path);
+      semfree(s);
       exit();
     }       
   }
@@ -53,6 +46,6 @@ int s,pid,n,k,fd;
   for(n=0; n<N; n++){
     wait();
   }
-
+  semfree(s);
   exit();
 }

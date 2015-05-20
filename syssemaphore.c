@@ -11,14 +11,14 @@
 //private: true if semaphore belongs to proc
 static int 
 belong(int sem_id){
-	int i = 0;
-	while (i < MAXSEMPROC){
+  int i = 0;
+  while (i < MAXSEMPROC){
     if (proc->sem[i] == sem_id){
       return 1;
     }
     i++;
-	}
-	return 0;
+  }
+  return 0;
 }
 
 //Create or obtain a descriptor of a semaphore.
@@ -37,7 +37,7 @@ sys_semget(void){ //int sem_id, int init_value
     if (ret>-1){ 
       proc->sem[proc->squantity] = ret;
       proc->squantity++;
-    }
+    } 
     return ret;
   }  
 }
@@ -70,13 +70,13 @@ sys_semdown(void){ //int sem_id
   if(argint(0, &sem_id) < 0)
       return -4;  
   if (belong(sem_id)){
-  		acquire(&stable.lock);
-      while(stable.semaphore[sem_id].value == 0)
-      	sleep(proc->chan, &stable.lock);
-      semdown(sem_id);
-      release(&stable.lock);
-      return 0;
-   }
+    acquire(&stable.lock);
+    while(stable.semaphore[sem_id].value == 0)
+      sleep(proc->chan, &stable.lock);
+    semdown(sem_id);
+    release(&stable.lock);
+    return 0;
+  }
   return -1;  
 }
 
@@ -86,11 +86,14 @@ sys_semup(void){ //int sem_id
   int sem_id;
   if(argint(0, &sem_id) < 0)
       return -1;
-  if (belong(sem_id)){  	
+  if (belong(sem_id)){    
     if (semup(sem_id) == -1)
       return -1;
-  } 
-  wakeup(proc->chan);
+    else {
+      wakeup(proc->chan);
+      return 0;
+    }
+  }   
   return -1;
 }
 
