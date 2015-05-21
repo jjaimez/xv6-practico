@@ -345,7 +345,7 @@ scheduler(void)
           // Process is done running for now.
           // It should have changed its p->state before coming back.            
           proc = 0;          
-          level=MLF_SIZE;
+          level=0;
         } else {
           level++;
         }
