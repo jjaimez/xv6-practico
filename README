@@ -1,5 +1,14 @@
-Jaimez Jacinto
-Pereyra Nicolas
+---------------------------------------------------------------
+-----------------Materia: Sistemas Operativos------------------
+----Grupo: Jacinto Jaimez, Nicolas Pereyra, Adrián Galfioni----
+------------------Fecha de entrega: 21/05/15-------------------
+-------------------------Proyecto 3----------------------------
+---------------------------------------------------------------
 
-Agregamos cmillion2 que se cambia su prioridad.
+Instrucciones de uso:
+
+1: Ingresar a la carpeta xv6-unrc
+2: Ejecutar el comando 'make qemu'
+3: Dentro de qemu, ejecutar comando 'semaphoreexample' (Ejemplo de utilización de semaforos).
+4: Dentro de qemu, ejecutar comando 'prodcon' (Ejemplo de productor-consumidor utilizando semaforos).
 
