@@ -13,6 +13,7 @@ struct gatedesc idt[256];
 extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
+int i=0;
 
 void
 tvinit(void)
@@ -77,7 +78,7 @@ trap(struct trapframe *tf)
             cpu->id, tf->cs, tf->eip);
     lapiceoi();
     break;
-   
+
   //PAGEBREAK: 13
   default:
     if(proc == 0 || (tf->cs&3) == 0){
@@ -86,12 +87,18 @@ trap(struct trapframe *tf)
               tf->trapno, cpu->id, tf->eip, rcr2());
       panic("trap");
     }
-    // In user space, assume process misbehaved.
-    cprintf("pid %d %s: trap %d err %d on cpu %d "
-            "eip 0x%x addr 0x%x--kill proc\n",
-            proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
-            rcr2());
-    proc->killed = 1;
+    if (tf->trapno == T_PGFLT && proc && rcr2() >= PGROUNDUP(rcr2())-8   && rcr2() <= proc->sz && rcr2()>= proc->sz- ALLOCATEDPAGES*PGSIZE){
+        cprintf("estoy por alocar \n");
+      allocuvm(proc->pgdir, PGROUNDDOWN(rcr2()), PGROUNDUP(rcr2()));
+        cprintf("alloco %d \n" , ++i);
+      }else{
+      // In user space, assume process misbehaved.
+      cprintf("pid %d %s: trap %d err %d on cpu %d "
+              "eip 0x%x addr 0x%x--kill proc\n",
+              proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
+              rcr2());
+      proc->killed = 1;
+  }
   }
 
   // Force process exit if it has been killed and is in user space.

@@ -1,4 +1,4 @@
-//Count ten million
+//Count ten million	
 
 #include "types.h"
 #include "stat.h"
@@ -7,12 +7,27 @@
 
 
 int
+fibonacci(int n)
+{  
+  int r = 0;
+  if (n>2){
+    r = fibonacci(n-1) + fibonacci(n-2);
+    return r;
+  } 
+  else if (n==2)       
+    return 1;
+  else if (n==1)       
+    return 1;
+  else if (n==0)
+    return 0;
+  else
+    return -1;          
+}
+
+int
 main(int argc, char *argv[])
 {
-    int i = 0;
-    while (i<10000000){
-        i++;
-    }
-    procstat(); //print all process (this process ends with priority 3)
-    exit();
+  fibonacci(100);
+  printf(1,"termino \n");
+  exit();
 }
