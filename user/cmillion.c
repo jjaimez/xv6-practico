@@ -4,14 +4,13 @@
 #include "stat.h"
 #include "user.h"
 
-
-
 int
 fibonacci(int n)
 {  
   int r = 0;
   if (n>2){
-    r = fibonacci(n-1) + fibonacci(n-2);
+    r = fibonacci(n-1);
+
     return r;
   } 
   else if (n==2)       
@@ -27,7 +26,7 @@ fibonacci(int n)
 int
 main(int argc, char *argv[])
 {
-  fibonacci(100);
+  fibonacci(1000);
   printf(1,"termino \n");
   exit();
 }

@@ -1619,11 +1619,11 @@ exec(char *path, char **argv)
 80100cd7:	05 ff 0f 00 00       	add    $0xfff,%eax
 80100cdc:	25 00 f0 ff ff       	and    $0xfffff000,%eax
 80100ce1:	89 45 e0             	mov    %eax,-0x20(%ebp)
-  if((sz = allocuvm(pgdir, sz + ALLOCATEDPAGES*PGSIZE, sz + (ALLOCATEDPAGES +1)*PGSIZE)) == 0)
+  if((sz = allocuvm(pgdir, sz - ALLOCATEDPAGES*PGSIZE, sz - (ALLOCATEDPAGES +1)*PGSIZE)) == 0)
 80100ce4:	8b 45 e0             	mov    -0x20(%ebp),%eax
-80100ce7:	8d 90 00 f0 01 00    	lea    0x1f000(%eax),%edx
+80100ce7:	8d 90 00 50 ff ff    	lea    -0xb000(%eax),%edx
 80100ced:	8b 45 e0             	mov    -0x20(%ebp),%eax
-80100cf0:	05 00 e0 01 00       	add    $0x1e000,%eax
+80100cf0:	2d 00 a0 00 00       	sub    $0xa000,%eax
 80100cf5:	83 ec 04             	sub    $0x4,%esp
 80100cf8:	52                   	push   %edx
 80100cf9:	50                   	push   %eax
@@ -14291,7 +14291,7 @@ trap(struct trapframe *tf)
 80107055:	68 86 91 10 80       	push   $0x80109186
 8010705a:	e8 fd 94 ff ff       	call   8010055c <panic>
     }
-    if (tf->trapno == T_PGFLT && proc && rcr2() >= PGROUNDUP(rcr2())-8   && rcr2() <= proc->sz && rcr2()>= proc->sz- ALLOCATEDPAGES*PGSIZE){
+    if (tf->trapno == T_PGFLT && proc && rcr2() >= PGROUNDUP(rcr2())-8   &&
 8010705f:	8b 45 08             	mov    0x8(%ebp),%eax
 80107062:	8b 40 30             	mov    0x30(%eax),%eax
 80107065:	83 f8 0e             	cmp    $0xe,%eax
@@ -14307,17 +14307,25 @@ trap(struct trapframe *tf)
 80107092:	83 e8 08             	sub    $0x8,%eax
 80107095:	39 c3                	cmp    %eax,%ebx
 80107097:	0f 82 98 00 00 00    	jb     80107135 <trap+0x256>
+     rcr2() <= proc->sz && rcr2()>= proc->sz- ALLOCATEDPAGES*PGSIZE){
 8010709d:	e8 a0 fc ff ff       	call   80106d42 <rcr2>
 801070a2:	89 c2                	mov    %eax,%edx
 801070a4:	65 a1 04 00 00 00    	mov    %gs:0x4,%eax
 801070aa:	8b 00                	mov    (%eax),%eax
+      // In kernel, it must be our mistake.
+      cprintf("unexpected trap %d from cpu %d eip %x (cr2=0x%x)\n",
+              tf->trapno, cpu->id, tf->eip, rcr2());
+      panic("trap");
+    }
+    if (tf->trapno == T_PGFLT && proc && rcr2() >= PGROUNDUP(rcr2())-8   &&
 801070ac:	39 c2                	cmp    %eax,%edx
 801070ae:	0f 87 81 00 00 00    	ja     80107135 <trap+0x256>
+     rcr2() <= proc->sz && rcr2()>= proc->sz- ALLOCATEDPAGES*PGSIZE){
 801070b4:	e8 89 fc ff ff       	call   80106d42 <rcr2>
 801070b9:	89 c2                	mov    %eax,%edx
 801070bb:	65 a1 04 00 00 00    	mov    %gs:0x4,%eax
 801070c1:	8b 00                	mov    (%eax),%eax
-801070c3:	2d 00 e0 01 00       	sub    $0x1e000,%eax
+801070c3:	2d 00 a0 00 00       	sub    $0xa000,%eax
 801070c8:	39 c2                	cmp    %eax,%edx
 801070ca:	72 69                	jb     80107135 <trap+0x256>
         cprintf("estoy por alocar \n");

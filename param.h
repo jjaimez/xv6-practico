@@ -14,4 +14,4 @@
 #define QUANTUM      3   //quantum
 #define MAXSEM       20  // maximum quantity of semaphores in system
 #define MAXSEMPROC   5   //  maximum quantity of semaphores per process
-#define ALLOCATEDPAGES 30   // allocated pages
+#define ALLOCATEDPAGES 10   // allocated pages

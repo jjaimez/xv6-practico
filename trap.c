@@ -87,7 +87,8 @@ trap(struct trapframe *tf)
               tf->trapno, cpu->id, tf->eip, rcr2());
       panic("trap");
     }
-    if (tf->trapno == T_PGFLT && proc && rcr2() >= PGROUNDUP(rcr2())-8   && rcr2() <= proc->sz && rcr2()>= proc->sz- ALLOCATEDPAGES*PGSIZE){
+    if (tf->trapno == T_PGFLT && proc && rcr2() >= PGROUNDUP(rcr2())-8   &&
+     rcr2() <= proc->sz && rcr2()>= proc->sz- ALLOCATEDPAGES*PGSIZE){
         cprintf("estoy por alocar \n");
       allocuvm(proc->pgdir, PGROUNDDOWN(rcr2()), PGROUNDUP(rcr2()));
         cprintf("alloco %d \n" , ++i);

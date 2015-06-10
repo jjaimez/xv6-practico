@@ -10,7 +10,9 @@ fibonacci(int n)
 {  
   int r = 0;
   if (n>2){
+    printf(1,"fibo \n");
     r = fibonacci(n-1) + fibonacci(n-2);
+
     return r;
   } 
   else if (n==2)       
