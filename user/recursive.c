@@ -1,4 +1,3 @@
-//recursive fibonacci
 
 #include "types.h"
 #include "stat.h"
@@ -20,9 +19,16 @@ recursive(int n)
 int
 main(int argc, char *argv[])
 {
+  if(fork()==0){
+    recursive(250);
+    printf(1,"finish 1 \n");
+    exit();
+  } else {
+  wait();
   recursive(250);
   printf(1,"finish 1 \n");
   printf(1,"the next execution maybe not work (trap 14) \n");
   recursive(300);
   exit();
+  }
 }

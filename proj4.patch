@@ -1,0 +1,1878 @@
+diff -rupN xv6-practico/defs.h xv6-unrc/defs.h
+--- xv6-practico/defs.h	2015-05-19 19:48:59.596347000 -0300
++++ xv6-unrc/defs.h	2015-04-08 15:02:06.000000000 -0300
+@@ -8,8 +8,6 @@ struct rtcdate;
+ struct spinlock;
+ struct stat;
+ struct superblock;
+-struct semaphore;
+-
+ 
+ // bio.c
+ void            binit(void);
+@@ -181,14 +179,5 @@ void            switchkvm(void);
+ int             copyout(pde_t*, uint, void*, uint);
+ void            clearpteu(pde_t *pgdir, char *uva);
+ 
+-//semaphore.c
+-int            semdown(int sem_id);
+-int            semfree(int sem_id);
+-int            semget(int sem_id, int init_value);
+-int            semup(int sem_id);
+-int            semvalue(int sem_id);
+-
+ // number of elements in fixed-size array
+ #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+-
+-
+diff -rupN xv6-practico/exec.c xv6-unrc/exec.c
+--- xv6-practico/exec.c	2015-06-10 20:31:01.275888162 -0300
++++ xv6-unrc/exec.c	2015-04-08 15:02:06.000000000 -0300
+@@ -52,11 +52,13 @@ exec(char *path, char **argv)
+   iunlockput(ip);
+   end_op();
+   ip = 0;
+-  //allocate one page and leave a space to grow the stack and detect stack overflow
+-  sz = PGROUNDUP(sz);   
+-  if((sz = allocuvm(pgdir, sz + MAXPAGES*PGSIZE, sz + (MAXPAGES +1)*PGSIZE)) == 0)
++
++  // Allocate two pages at the next page boundary.
++  // Make the first inaccessible.  Use the second as the user stack.
++  sz = PGROUNDUP(sz);
++  if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
+     goto bad;
+-  //clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
++  clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
+   sp = sz;
+ 
+   // Push argument strings, prepare rest of stack in ustack.
+Los ficheros binarios xv6-practico/_fibonaccir y xv6-unrc/_fibonaccir son distintos
+diff -rupN xv6-practico/fmt/sysproc.c xv6-unrc/fmt/sysproc.c
+--- xv6-practico/fmt/sysproc.c	2015-05-17 18:44:31.115148000 -0300
++++ xv6-unrc/fmt/sysproc.c	2015-04-08 15:02:06.000000000 -0300
+@@ -98,10 +98,3 @@
+ 3747 
+ 3748 
+ 3749 
+-// Print a process listing to console. 
+-int
+-sys_procstat(void)
+-{	
+-  procdump();
+-	return 0;
+-}
+diff -rupN xv6-practico/fmt/usys.S xv6-unrc/fmt/usys.S
+--- xv6-practico/fmt/usys.S	2015-05-17 18:44:31.119148000 -0300
++++ xv6-unrc/fmt/usys.S	2015-04-08 15:02:06.000000000 -0300
+@@ -29,7 +29,7 @@
+ 8378 SYSCALL(sbrk)
+ 8379 SYSCALL(sleep)
+ 8380 SYSCALL(uptime)
+-8381 SYSCALL(procstat)
++8381 
+ 8382 
+ 8383 
+ 8384 
+diff -rupN xv6-practico/.git/COMMIT_EDITMSG xv6-unrc/.git/COMMIT_EDITMSG
+--- xv6-practico/.git/COMMIT_EDITMSG	2015-05-19 20:40:34.976189000 -0300
++++ xv6-unrc/.git/COMMIT_EDITMSG	1969-12-31 21:00:00.000000000 -0300
+@@ -1 +0,0 @@
+-movidas
+diff -rupN xv6-practico/.git/config xv6-unrc/.git/config
+--- xv6-practico/.git/config	2015-05-17 18:44:31.015148000 -0300
++++ xv6-unrc/.git/config	1969-12-31 21:00:00.000000000 -0300
+@@ -1,11 +0,0 @@
+-[core]
+-	repositoryformatversion = 0
+-	filemode = true
+-	bare = false
+-	logallrefupdates = true
+-[remote "origin"]
+-	url = https://github.com/jjaimez/xv6-practico
+-	fetch = +refs/heads/*:refs/remotes/origin/*
+-[branch "master"]
+-	remote = origin
+-	merge = refs/heads/master
+diff -rupN xv6-practico/.git/description xv6-unrc/.git/description
+--- xv6-practico/.git/description	2015-05-17 18:44:28.635148000 -0300
++++ xv6-unrc/.git/description	1969-12-31 21:00:00.000000000 -0300
+@@ -1 +0,0 @@
+-Unnamed repository; edit this file 'description' to name the repository.
+diff -rupN xv6-practico/.git/FETCH_HEAD xv6-unrc/.git/FETCH_HEAD
+--- xv6-practico/.git/FETCH_HEAD	2015-06-10 19:29:30.634335425 -0300
++++ xv6-unrc/.git/FETCH_HEAD	1969-12-31 21:00:00.000000000 -0300
+@@ -1 +0,0 @@
+-1bf101ce76c125b61ffa65da6e3ebb6e866ee2af		branch 'master' of https://github.com/jjaimez/xv6-practico
+diff -rupN xv6-practico/.git/HEAD xv6-unrc/.git/HEAD
+--- xv6-practico/.git/HEAD	2015-05-17 18:44:31.015148000 -0300
++++ xv6-unrc/.git/HEAD	1969-12-31 21:00:00.000000000 -0300
+@@ -1 +0,0 @@
+-ref: refs/heads/master
+diff -rupN xv6-practico/.git/hooks/applypatch-msg.sample xv6-unrc/.git/hooks/applypatch-msg.sample
+--- xv6-practico/.git/hooks/applypatch-msg.sample	2015-05-17 18:44:28.647148000 -0300
++++ xv6-unrc/.git/hooks/applypatch-msg.sample	1969-12-31 21:00:00.000000000 -0300
+@@ -1,15 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to check the commit log message taken by
+-# applypatch from an e-mail message.
+-#
+-# The hook should exit with non-zero status after issuing an
+-# appropriate message if it wants to stop the commit.  The hook is
+-# allowed to edit the commit message file.
+-#
+-# To enable this hook, rename this file to "applypatch-msg".
+-
+-. git-sh-setup
+-test -x "$GIT_DIR/hooks/commit-msg" &&
+-	exec "$GIT_DIR/hooks/commit-msg" ${1+"$@"}
+-:
+diff -rupN xv6-practico/.git/hooks/commit-msg.sample xv6-unrc/.git/hooks/commit-msg.sample
+--- xv6-practico/.git/hooks/commit-msg.sample	2015-05-17 18:44:28.647148000 -0300
++++ xv6-unrc/.git/hooks/commit-msg.sample	1969-12-31 21:00:00.000000000 -0300
+@@ -1,24 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to check the commit log message.
+-# Called by "git commit" with one argument, the name of the file
+-# that has the commit message.  The hook should exit with non-zero
+-# status after issuing an appropriate message if it wants to stop the
+-# commit.  The hook is allowed to edit the commit message file.
+-#
+-# To enable this hook, rename this file to "commit-msg".
+-
+-# Uncomment the below to add a Signed-off-by line to the message.
+-# Doing this in a hook is a bad idea in general, but the prepare-commit-msg
+-# hook is more suited to it.
+-#
+-# SOB=$(git var GIT_AUTHOR_IDENT | sed -n 's/^\(.*>\).*$/Signed-off-by: \1/p')
+-# grep -qs "^$SOB" "$1" || echo "$SOB" >> "$1"
+-
+-# This example catches duplicate Signed-off-by lines.
+-
+-test "" = "$(grep '^Signed-off-by: ' "$1" |
+-	 sort | uniq -c | sed -e '/^[ 	]*1[ 	]/d')" || {
+-	echo >&2 Duplicate Signed-off-by lines.
+-	exit 1
+-}
+diff -rupN xv6-practico/.git/hooks/post-update.sample xv6-unrc/.git/hooks/post-update.sample
+--- xv6-practico/.git/hooks/post-update.sample	2015-05-17 18:44:28.647148000 -0300
++++ xv6-unrc/.git/hooks/post-update.sample	1969-12-31 21:00:00.000000000 -0300
+@@ -1,8 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to prepare a packed repository for use over
+-# dumb transports.
+-#
+-# To enable this hook, rename this file to "post-update".
+-
+-exec git update-server-info
+diff -rupN xv6-practico/.git/hooks/pre-applypatch.sample xv6-unrc/.git/hooks/pre-applypatch.sample
+--- xv6-practico/.git/hooks/pre-applypatch.sample	2015-05-17 18:44:28.647148000 -0300
++++ xv6-unrc/.git/hooks/pre-applypatch.sample	1969-12-31 21:00:00.000000000 -0300
+@@ -1,14 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to verify what is about to be committed
+-# by applypatch from an e-mail message.
+-#
+-# The hook should exit with non-zero status after issuing an
+-# appropriate message if it wants to stop the commit.
+-#
+-# To enable this hook, rename this file to "pre-applypatch".
+-
+-. git-sh-setup
+-test -x "$GIT_DIR/hooks/pre-commit" &&
+-	exec "$GIT_DIR/hooks/pre-commit" ${1+"$@"}
+-:
+diff -rupN xv6-practico/.git/hooks/pre-commit.sample xv6-unrc/.git/hooks/pre-commit.sample
+--- xv6-practico/.git/hooks/pre-commit.sample	2015-05-17 18:44:28.643148000 -0300
++++ xv6-unrc/.git/hooks/pre-commit.sample	1969-12-31 21:00:00.000000000 -0300
+@@ -1,49 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to verify what is about to be committed.
+-# Called by "git commit" with no arguments.  The hook should
+-# exit with non-zero status after issuing an appropriate message if
+-# it wants to stop the commit.
+-#
+-# To enable this hook, rename this file to "pre-commit".
+-
+-if git rev-parse --verify HEAD >/dev/null 2>&1
+-then
+-	against=HEAD
+-else
+-	# Initial commit: diff against an empty tree object
+-	against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+-fi
+-
+-# If you want to allow non-ASCII filenames set this variable to true.
+-allownonascii=$(git config --bool hooks.allownonascii)
+-
+-# Redirect output to stderr.
+-exec 1>&2
+-
+-# Cross platform projects tend to avoid non-ASCII filenames; prevent
+-# them from being added to the repository. We exploit the fact that the
+-# printable range starts at the space character and ends with tilde.
+-if [ "$allownonascii" != "true" ] &&
+-	# Note that the use of brackets around a tr range is ok here, (it's
+-	# even required, for portability to Solaris 10's /usr/bin/tr), since
+-	# the square bracket bytes happen to fall in the designated range.
+-	test $(git diff --cached --name-only --diff-filter=A -z $against |
+-	  LC_ALL=C tr -d '[ -~]\0' | wc -c) != 0
+-then
+-	cat <<\EOF
+-Error: Attempt to add a non-ASCII file name.
+-
+-This can cause problems if you want to work with people on other platforms.
+-
+-To be portable it is advisable to rename the file.
+-
+-If you know what you are doing you can disable this check using:
+-
+-  git config hooks.allownonascii true
+-EOF
+-	exit 1
+-fi
+-
+-# If there are whitespace errors, print the offending file names and fail.
+-exec git diff-index --check --cached $against --
+diff -rupN xv6-practico/.git/hooks/prepare-commit-msg.sample xv6-unrc/.git/hooks/prepare-commit-msg.sample
+--- xv6-practico/.git/hooks/prepare-commit-msg.sample	2015-05-17 18:44:28.647148000 -0300
++++ xv6-unrc/.git/hooks/prepare-commit-msg.sample	1969-12-31 21:00:00.000000000 -0300
+@@ -1,36 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to prepare the commit log message.
+-# Called by "git commit" with the name of the file that has the
+-# commit message, followed by the description of the commit
+-# message's source.  The hook's purpose is to edit the commit
+-# message file.  If the hook fails with a non-zero status,
+-# the commit is aborted.
+-#
+-# To enable this hook, rename this file to "prepare-commit-msg".
+-
+-# This hook includes three examples.  The first comments out the
+-# "Conflicts:" part of a merge commit.
+-#
+-# The second includes the output of "git diff --name-status -r"
+-# into the message, just before the "git status" output.  It is
+-# commented because it doesn't cope with --amend or with squashed
+-# commits.
+-#
+-# The third example adds a Signed-off-by line to the message, that can
+-# still be edited.  This is rarely a good idea.
+-
+-case "$2,$3" in
+-  merge,)
+-    /usr/bin/perl -i.bak -ne 's/^/# /, s/^# #/#/ if /^Conflicts/ .. /#/; print' "$1" ;;
+-
+-# ,|template,)
+-#   /usr/bin/perl -i.bak -pe '
+-#      print "\n" . `git diff --cached --name-status -r`
+-#	 if /^#/ && $first++ == 0' "$1" ;;
+-
+-  *) ;;
+-esac
+-
+-# SOB=$(git var GIT_AUTHOR_IDENT | sed -n 's/^\(.*>\).*$/Signed-off-by: \1/p')
+-# grep -qs "^$SOB" "$1" || echo "$SOB" >> "$1"
+diff -rupN xv6-practico/.git/hooks/pre-push.sample xv6-unrc/.git/hooks/pre-push.sample
+--- xv6-practico/.git/hooks/pre-push.sample	2015-05-17 18:44:28.651148000 -0300
++++ xv6-unrc/.git/hooks/pre-push.sample	1969-12-31 21:00:00.000000000 -0300
+@@ -1,54 +0,0 @@
+-#!/bin/sh
+-
+-# An example hook script to verify what is about to be pushed.  Called by "git
+-# push" after it has checked the remote status, but before anything has been
+-# pushed.  If this script exits with a non-zero status nothing will be pushed.
+-#
+-# This hook is called with the following parameters:
+-#
+-# $1 -- Name of the remote to which the push is being done
+-# $2 -- URL to which the push is being done
+-#
+-# If pushing without using a named remote those arguments will be equal.
+-#
+-# Information about the commits which are being pushed is supplied as lines to
+-# the standard input in the form:
+-#
+-#   <local ref> <local sha1> <remote ref> <remote sha1>
+-#
+-# This sample shows how to prevent push of commits where the log message starts
+-# with "WIP" (work in progress).
+-
+-remote="$1"
+-url="$2"
+-
+-z40=0000000000000000000000000000000000000000
+-
+-IFS=' '
+-while read local_ref local_sha remote_ref remote_sha
+-do
+-	if [ "$local_sha" = $z40 ]
+-	then
+-		# Handle delete
+-		:
+-	else
+-		if [ "$remote_sha" = $z40 ]
+-		then
+-			# New branch, examine all commits
+-			range="$local_sha"
+-		else
+-			# Update to existing branch, examine new commits
+-			range="$remote_sha..$local_sha"
+-		fi
+-
+-		# Check for WIP commit
+-		commit=`git rev-list -n 1 --grep '^WIP' "$range"`
+-		if [ -n "$commit" ]
+-		then
+-			echo "Found WIP commit in $local_ref, not pushing"
+-			exit 1
+-		fi
+-	fi
+-done
+-
+-exit 0
+diff -rupN xv6-practico/.git/hooks/pre-rebase.sample xv6-unrc/.git/hooks/pre-rebase.sample
+--- xv6-practico/.git/hooks/pre-rebase.sample	2015-05-17 18:44:28.647148000 -0300
++++ xv6-unrc/.git/hooks/pre-rebase.sample	1969-12-31 21:00:00.000000000 -0300
+@@ -1,169 +0,0 @@
+-#!/bin/sh
+-#
+-# Copyright (c) 2006, 2008 Junio C Hamano
+-#
+-# The "pre-rebase" hook is run just before "git rebase" starts doing
+-# its job, and can prevent the command from running by exiting with
+-# non-zero status.
+-#
+-# The hook is called with the following parameters:
+-#
+-# $1 -- the upstream the series was forked from.
+-# $2 -- the branch being rebased (or empty when rebasing the current branch).
+-#
+-# This sample shows how to prevent topic branches that are already
+-# merged to 'next' branch from getting rebased, because allowing it
+-# would result in rebasing already published history.
+-
+-publish=next
+-basebranch="$1"
+-if test "$#" = 2
+-then
+-	topic="refs/heads/$2"
+-else
+-	topic=`git symbolic-ref HEAD` ||
+-	exit 0 ;# we do not interrupt rebasing detached HEAD
+-fi
+-
+-case "$topic" in
+-refs/heads/??/*)
+-	;;
+-*)
+-	exit 0 ;# we do not interrupt others.
+-	;;
+-esac
+-
+-# Now we are dealing with a topic branch being rebased
+-# on top of master.  Is it OK to rebase it?
+-
+-# Does the topic really exist?
+-git show-ref -q "$topic" || {
+-	echo >&2 "No such branch $topic"
+-	exit 1
+-}
+-
+-# Is topic fully merged to master?
+-not_in_master=`git rev-list --pretty=oneline ^master "$topic"`
+-if test -z "$not_in_master"
+-then
+-	echo >&2 "$topic is fully merged to master; better remove it."
+-	exit 1 ;# we could allow it, but there is no point.
+-fi
+-
+-# Is topic ever merged to next?  If so you should not be rebasing it.
+-only_next_1=`git rev-list ^master "^$topic" ${publish} | sort`
+-only_next_2=`git rev-list ^master           ${publish} | sort`
+-if test "$only_next_1" = "$only_next_2"
+-then
+-	not_in_topic=`git rev-list "^$topic" master`
+-	if test -z "$not_in_topic"
+-	then
+-		echo >&2 "$topic is already up-to-date with master"
+-		exit 1 ;# we could allow it, but there is no point.
+-	else
+-		exit 0
+-	fi
+-else
+-	not_in_next=`git rev-list --pretty=oneline ^${publish} "$topic"`
+-	/usr/bin/perl -e '
+-		my $topic = $ARGV[0];
+-		my $msg = "* $topic has commits already merged to public branch:\n";
+-		my (%not_in_next) = map {
+-			/^([0-9a-f]+) /;
+-			($1 => 1);
+-		} split(/\n/, $ARGV[1]);
+-		for my $elem (map {
+-				/^([0-9a-f]+) (.*)$/;
+-				[$1 => $2];
+-			} split(/\n/, $ARGV[2])) {
+-			if (!exists $not_in_next{$elem->[0]}) {
+-				if ($msg) {
+-					print STDERR $msg;
+-					undef $msg;
+-				}
+-				print STDERR " $elem->[1]\n";
+-			}
+-		}
+-	' "$topic" "$not_in_next" "$not_in_master"
+-	exit 1
+-fi
+-
+-<<\DOC_END
+-
+-This sample hook safeguards topic branches that have been
+-published from being rewound.
+-
+-The workflow assumed here is:
+-
+- * Once a topic branch forks from "master", "master" is never
+-   merged into it again (either directly or indirectly).
+-
+- * Once a topic branch is fully cooked and merged into "master",
+-   it is deleted.  If you need to build on top of it to correct
+-   earlier mistakes, a new topic branch is created by forking at
+-   the tip of the "master".  This is not strictly necessary, but
+-   it makes it easier to keep your history simple.
+-
+- * Whenever you need to test or publish your changes to topic
+-   branches, merge them into "next" branch.
+-
+-The script, being an example, hardcodes the publish branch name
+-to be "next", but it is trivial to make it configurable via
+-$GIT_DIR/config mechanism.
+-
+-With this workflow, you would want to know:
+-
+-(1) ... if a topic branch has ever been merged to "next".  Young
+-    topic branches can have stupid mistakes you would rather
+-    clean up before publishing, and things that have not been
+-    merged into other branches can be easily rebased without
+-    affecting other people.  But once it is published, you would
+-    not want to rewind it.
+-
+-(2) ... if a topic branch has been fully merged to "master".
+-    Then you can delete it.  More importantly, you should not
+-    build on top of it -- other people may already want to
+-    change things related to the topic as patches against your
+-    "master", so if you need further changes, it is better to
+-    fork the topic (perhaps with the same name) afresh from the
+-    tip of "master".
+-
+-Let's look at this example:
+-
+-		   o---o---o---o---o---o---o---o---o---o "next"
+-		  /       /           /           /
+-		 /   a---a---b A     /           /
+-		/   /               /           /
+-	       /   /   c---c---c---c B         /
+-	      /   /   /             \         /
+-	     /   /   /   b---b C     \       /
+-	    /   /   /   /             \     /
+-    ---o---o---o---o---o---o---o---o---o---o---o "master"
+-
+-
+-A, B and C are topic branches.
+-
+- * A has one fix since it was merged up to "next".
+-
+- * B has finished.  It has been fully merged up to "master" and "next",
+-   and is ready to be deleted.
+-
+- * C has not merged to "next" at all.
+-
+-We would want to allow C to be rebased, refuse A, and encourage
+-B to be deleted.
+-
+-To compute (1):
+-
+-	git rev-list ^master ^topic next
+-	git rev-list ^master        next
+-
+-	if these match, topic has not merged in next at all.
+-
+-To compute (2):
+-
+-	git rev-list master..topic
+-
+-	if this is empty, it is fully merged to "master".
+-
+-DOC_END
+diff -rupN xv6-practico/.git/hooks/update.sample xv6-unrc/.git/hooks/update.sample
+--- xv6-practico/.git/hooks/update.sample	2015-05-17 18:44:28.643148000 -0300
++++ xv6-unrc/.git/hooks/update.sample	1969-12-31 21:00:00.000000000 -0300
+@@ -1,128 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to blocks unannotated tags from entering.
+-# Called by "git receive-pack" with arguments: refname sha1-old sha1-new
+-#
+-# To enable this hook, rename this file to "update".
+-#
+-# Config
+-# ------
+-# hooks.allowunannotated
+-#   This boolean sets whether unannotated tags will be allowed into the
+-#   repository.  By default they won't be.
+-# hooks.allowdeletetag
+-#   This boolean sets whether deleting tags will be allowed in the
+-#   repository.  By default they won't be.
+-# hooks.allowmodifytag
+-#   This boolean sets whether a tag may be modified after creation. By default
+-#   it won't be.
+-# hooks.allowdeletebranch
+-#   This boolean sets whether deleting branches will be allowed in the
+-#   repository.  By default they won't be.
+-# hooks.denycreatebranch
+-#   This boolean sets whether remotely creating branches will be denied
+-#   in the repository.  By default this is allowed.
+-#
+-
+-# --- Command line
+-refname="$1"
+-oldrev="$2"
+-newrev="$3"
+-
+-# --- Safety check
+-if [ -z "$GIT_DIR" ]; then
+-	echo "Don't run this script from the command line." >&2
+-	echo " (if you want, you could supply GIT_DIR then run" >&2
+-	echo "  $0 <ref> <oldrev> <newrev>)" >&2
+-	exit 1
+-fi
+-
+-if [ -z "$refname" -o -z "$oldrev" -o -z "$newrev" ]; then
+-	echo "usage: $0 <ref> <oldrev> <newrev>" >&2
+-	exit 1
+-fi
+-
+-# --- Config
+-allowunannotated=$(git config --bool hooks.allowunannotated)
+-allowdeletebranch=$(git config --bool hooks.allowdeletebranch)
+-denycreatebranch=$(git config --bool hooks.denycreatebranch)
+-allowdeletetag=$(git config --bool hooks.allowdeletetag)
+-allowmodifytag=$(git config --bool hooks.allowmodifytag)
+-
+-# check for no description
+-projectdesc=$(sed -e '1q' "$GIT_DIR/description")
+-case "$projectdesc" in
+-"Unnamed repository"* | "")
+-	echo "*** Project description file hasn't been set" >&2
+-	exit 1
+-	;;
+-esac
+-
+-# --- Check types
+-# if $newrev is 0000...0000, it's a commit to delete a ref.
+-zero="0000000000000000000000000000000000000000"
+-if [ "$newrev" = "$zero" ]; then
+-	newrev_type=delete
+-else
+-	newrev_type=$(git cat-file -t $newrev)
+-fi
+-
+-case "$refname","$newrev_type" in
+-	refs/tags/*,commit)
+-		# un-annotated tag
+-		short_refname=${refname##refs/tags/}
+-		if [ "$allowunannotated" != "true" ]; then
+-			echo "*** The un-annotated tag, $short_refname, is not allowed in this repository" >&2
+-			echo "*** Use 'git tag [ -a | -s ]' for tags you want to propagate." >&2
+-			exit 1
+-		fi
+-		;;
+-	refs/tags/*,delete)
+-		# delete tag
+-		if [ "$allowdeletetag" != "true" ]; then
+-			echo "*** Deleting a tag is not allowed in this repository" >&2
+-			exit 1
+-		fi
+-		;;
+-	refs/tags/*,tag)
+-		# annotated tag
+-		if [ "$allowmodifytag" != "true" ] && git rev-parse $refname > /dev/null 2>&1
+-		then
+-			echo "*** Tag '$refname' already exists." >&2
+-			echo "*** Modifying a tag is not allowed in this repository." >&2
+-			exit 1
+-		fi
+-		;;
+-	refs/heads/*,commit)
+-		# branch
+-		if [ "$oldrev" = "$zero" -a "$denycreatebranch" = "true" ]; then
+-			echo "*** Creating a branch is not allowed in this repository" >&2
+-			exit 1
+-		fi
+-		;;
+-	refs/heads/*,delete)
+-		# delete branch
+-		if [ "$allowdeletebranch" != "true" ]; then
+-			echo "*** Deleting a branch is not allowed in this repository" >&2
+-			exit 1
+-		fi
+-		;;
+-	refs/remotes/*,commit)
+-		# tracking branch
+-		;;
+-	refs/remotes/*,delete)
+-		# delete tracking branch
+-		if [ "$allowdeletebranch" != "true" ]; then
+-			echo "*** Deleting a tracking branch is not allowed in this repository" >&2
+-			exit 1
+-		fi
+-		;;
+-	*)
+-		# Anything else (is there anything else?)
+-		echo "*** Update hook: unknown type of update to ref $refname of type $newrev_type" >&2
+-		exit 1
+-		;;
+-esac
+-
+-# --- Finished
+-exit 0
+Los ficheros binarios xv6-practico/.git/index y xv6-unrc/.git/index son distintos
+diff -rupN xv6-practico/.git/info/exclude xv6-unrc/.git/info/exclude
+--- xv6-practico/.git/info/exclude	2015-05-17 18:44:28.631148000 -0300
++++ xv6-unrc/.git/info/exclude	1969-12-31 21:00:00.000000000 -0300
+@@ -1,6 +0,0 @@
+-# git ls-files --others --exclude-from=.git/info/exclude
+-# Lines that start with '#' are comments.
+-# For a project mostly in C, the following would be a good set of
+-# exclude patterns (uncomment them if you want to use them):
+-# *.[oa]
+-# *~
+diff -rupN xv6-practico/.git/logs/HEAD xv6-unrc/.git/logs/HEAD
+--- xv6-practico/.git/logs/HEAD	2015-06-10 19:29:30.774333615 -0300
++++ xv6-unrc/.git/logs/HEAD	1969-12-31 21:00:00.000000000 -0300
+@@ -1,4 +0,0 @@
+-0000000000000000000000000000000000000000 7fd874bedd111eb3c710c059a1a841659f327033 norcasitas <nico.orcasitas@gmail.com> 1431899071 -0300	clone: from https://github.com/jjaimez/xv6-practico
+-7fd874bedd111eb3c710c059a1a841659f327033 a8cbb8fcd18b98583ab46fea9faac6af5bb4998f norcasitas <nico.orcasitas@gmail.com> 1432078834 -0300	commit: movidas
+-a8cbb8fcd18b98583ab46fea9faac6af5bb4998f ae8ce1ae90b526f1a2f3ca5068e8e55bf039e259 norcasitas <nico.orcasitas@gmail.com> 1433807083 -0300	pull: Fast-forward
+-ae8ce1ae90b526f1a2f3ca5068e8e55bf039e259 1bf101ce76c125b61ffa65da6e3ebb6e866ee2af norcasitas <nico.orcasitas@gmail.com> 1433975370 -0300	pull: Fast-forward
+diff -rupN xv6-practico/.git/logs/refs/heads/master xv6-unrc/.git/logs/refs/heads/master
+--- xv6-practico/.git/logs/refs/heads/master	2015-06-10 19:29:30.762333771 -0300
++++ xv6-unrc/.git/logs/refs/heads/master	1969-12-31 21:00:00.000000000 -0300
+@@ -1,4 +0,0 @@
+-0000000000000000000000000000000000000000 7fd874bedd111eb3c710c059a1a841659f327033 norcasitas <nico.orcasitas@gmail.com> 1431899071 -0300	clone: from https://github.com/jjaimez/xv6-practico
+-7fd874bedd111eb3c710c059a1a841659f327033 a8cbb8fcd18b98583ab46fea9faac6af5bb4998f norcasitas <nico.orcasitas@gmail.com> 1432078834 -0300	commit: movidas
+-a8cbb8fcd18b98583ab46fea9faac6af5bb4998f ae8ce1ae90b526f1a2f3ca5068e8e55bf039e259 norcasitas <nico.orcasitas@gmail.com> 1433807083 -0300	pull: Fast-forward
+-ae8ce1ae90b526f1a2f3ca5068e8e55bf039e259 1bf101ce76c125b61ffa65da6e3ebb6e866ee2af norcasitas <nico.orcasitas@gmail.com> 1433975370 -0300	pull: Fast-forward
+diff -rupN xv6-practico/.git/logs/refs/remotes/origin/HEAD xv6-unrc/.git/logs/refs/remotes/origin/HEAD
+--- xv6-practico/.git/logs/refs/remotes/origin/HEAD	2015-05-17 18:44:31.015148000 -0300
++++ xv6-unrc/.git/logs/refs/remotes/origin/HEAD	1969-12-31 21:00:00.000000000 -0300
+@@ -1 +0,0 @@
+-0000000000000000000000000000000000000000 7fd874bedd111eb3c710c059a1a841659f327033 norcasitas <nico.orcasitas@gmail.com> 1431899071 -0300	clone: from https://github.com/jjaimez/xv6-practico
+diff -rupN xv6-practico/.git/logs/refs/remotes/origin/master xv6-unrc/.git/logs/refs/remotes/origin/master
+--- xv6-practico/.git/logs/refs/remotes/origin/master	2015-06-10 19:28:41.342993756 -0300
++++ xv6-unrc/.git/logs/refs/remotes/origin/master	1969-12-31 21:00:00.000000000 -0300
+@@ -1,3 +0,0 @@
+-7fd874bedd111eb3c710c059a1a841659f327033 a8cbb8fcd18b98583ab46fea9faac6af5bb4998f norcasitas <nico.orcasitas@gmail.com> 1432078844 -0300	update by push
+-a8cbb8fcd18b98583ab46fea9faac6af5bb4998f ae8ce1ae90b526f1a2f3ca5068e8e55bf039e259 NicolÃ¡s Pereyra Orcasitas <nico@localhost.localdomain> 1433807083 -0300	pull: fast-forward
+-ae8ce1ae90b526f1a2f3ca5068e8e55bf039e259 1bf101ce76c125b61ffa65da6e3ebb6e866ee2af NicolÃ¡s Pereyra Orcasitas <nico@localhost.localdomain> 1433975321 -0300	pull: fast-forward
+diff -rupN xv6-practico/.git/logs/refs/stash xv6-unrc/.git/logs/refs/stash
+--- xv6-practico/.git/logs/refs/stash	2015-06-10 19:28:47.322911046 -0300
++++ xv6-unrc/.git/logs/refs/stash	1969-12-31 21:00:00.000000000 -0300
+@@ -1 +0,0 @@
+-0000000000000000000000000000000000000000 5d2f998ccf2d48bf13482166f3f6c7c05513b0ff norcasitas <nico.orcasitas@gmail.com> 1433975327 -0300	WIP on master: ae8ce1a Readme modificado
+Los ficheros binarios xv6-practico/.git/objects/01/c3bef4158debaa6d618e0253fc17784e88e540 y xv6-unrc/.git/objects/01/c3bef4158debaa6d618e0253fc17784e88e540 son distintos
+Los ficheros binarios xv6-practico/.git/objects/02/29c4ae70bde41b5fab60eca6846f1cc686eb9a y xv6-unrc/.git/objects/02/29c4ae70bde41b5fab60eca6846f1cc686eb9a son distintos
+Los ficheros binarios xv6-practico/.git/objects/02/9776308091e1dbb8f190957cd0e341c7e072c9 y xv6-unrc/.git/objects/02/9776308091e1dbb8f190957cd0e341c7e072c9 son distintos
+Los ficheros binarios xv6-practico/.git/objects/03/90c8c5223d8a314b5ce35bb7adc43f19642cbd y xv6-unrc/.git/objects/03/90c8c5223d8a314b5ce35bb7adc43f19642cbd son distintos
+Los ficheros binarios xv6-practico/.git/objects/03/b048dce230beb589412e3a623123310121d1fe y xv6-unrc/.git/objects/03/b048dce230beb589412e3a623123310121d1fe son distintos
+Los ficheros binarios xv6-practico/.git/objects/05/1cf8eec603ed8186bcecd00ddcb566bd2c9845 y xv6-unrc/.git/objects/05/1cf8eec603ed8186bcecd00ddcb566bd2c9845 son distintos
+Los ficheros binarios xv6-practico/.git/objects/0d/2f024b54be567a456056d5c9f4f7afc9a8cbc0 y xv6-unrc/.git/objects/0d/2f024b54be567a456056d5c9f4f7afc9a8cbc0 son distintos
+Los ficheros binarios xv6-practico/.git/objects/0d/51a7284f0bb1c0aa87a24832ae51cc8df52e35 y xv6-unrc/.git/objects/0d/51a7284f0bb1c0aa87a24832ae51cc8df52e35 son distintos
+Los ficheros binarios xv6-practico/.git/objects/0d/ea2f0d5f0a51f84f8405ff06fd319ad3e73737 y xv6-unrc/.git/objects/0d/ea2f0d5f0a51f84f8405ff06fd319ad3e73737 son distintos
+Los ficheros binarios xv6-practico/.git/objects/0f/4c14bdd5e31850cb4b0bdfed71bed4bc3f8d7e y xv6-unrc/.git/objects/0f/4c14bdd5e31850cb4b0bdfed71bed4bc3f8d7e son distintos
+Los ficheros binarios xv6-practico/.git/objects/12/2d9d53f114739adf2cd5996b6e80db1b028cc2 y xv6-unrc/.git/objects/12/2d9d53f114739adf2cd5996b6e80db1b028cc2 son distintos
+Los ficheros binarios xv6-practico/.git/objects/14/87a96349d2ae658c2b86ad8277d819acdf3399 y xv6-unrc/.git/objects/14/87a96349d2ae658c2b86ad8277d819acdf3399 son distintos
+diff -rupN xv6-practico/.git/objects/14/b5047b616f322609ee450a37b36a34e8a9d1d9 xv6-unrc/.git/objects/14/b5047b616f322609ee450a37b36a34e8a9d1d9
+--- xv6-practico/.git/objects/14/b5047b616f322609ee450a37b36a34e8a9d1d9	2015-05-19 20:40:27.316190000 -0300
++++ xv6-unrc/.git/objects/14/b5047b616f322609ee450a37b36a34e8a9d1d9	1969-12-31 21:00:00.000000000 -0300
+@@ -1,4 +0,0 @@
+-xWmoÛ6ŞgıŠC†t¶c§İZtÅ²(ÚĞõÃÚ}º %:æ,QIÕvÛü÷=w¤ä—…A‹öİs<Ÿ{!=¯š9=}şâçï¾×¦¨ºRÑ‰ß¶Ê/O²ªT‹#M›Û¼>4ªU]åÛ¦óGêº;T´¶)5›ÏnëŠ¼ªX™=~L9e©h\¯”£œ`àUMlDkí—ôû»ôáæıßï_½|ûöœ½ß31]=‡mèTå_ÚÛ®VÆ;jù¥"çób5¥…mj‘;Ù”7ğ(^±×JÏmn·,:Sxİ˜súÀ~òOª$Y}ª\Km£±¯…D.08¸8Tg¼²SÊMÉ›„PÚ:OyŒğ\8øMùb)qÀåø+K»‹¶è¬ÅiˆÉUÎg°Ê¼_F¬Á‚)8ğ4Ñí8û’éÅHÜ\]ÊÂÙ•ûL_¿Šë³gt5(Ç°%²ÊwÖĞìÇˆğA—4Áßd,^Æ¬6O.²»£°MWÍpÔZ›Üƒ ç­6·ßp÷ºQÎü€#¾CB¶ ­İ
+-ÑËŒşíÀ˜SHç¤m™i¡İk/ùşS‚wT)s‹zi1‚)™FRüÂÜ#ş÷É+–¹¥	vôÑMi¢Ú‹ì~>ï£^ÒˆWOÆÌ?§ötœDÎë9fºm/ÈÑ¯0ÄçÙYğ‹N€^Ò“ 	p4“%»”pÚş—0ñô§Ù\ƒ»½vÙU²›AÂ'šÌQıÄlu÷‹ÙWş=ãÿ^Õ¢:îÛ}İØræôg®ˆ{" œ»]r©ìĞCóª)VœBŒœÍÈÉ„24ßzÌ.¢WK¿Dş¹·÷T„G†@¡a¤æÑ8äÚ¼P¡pğùr8àcÍ©Â7T ‡~¤ÇÈWÌÌAóÀLÊj¬é¨õ¢úLÎópîW‘ìÿ@ï!ÏßÄtì§È—4ÎıT’vô)¯tÙO®¾¡¡?ìtq2Âd´Š™†
+-ù^[íóy…¡.Yœ’s6ÆPäÜò`İÜ*Îü\ùµ’	/…ä—‡æ\q×bÜâk˜	+eªÎÇ2‘îáãî2×÷ßaæX›JŞ~Ñ³o¶f‚T¸Ú`È³(è›bYj;úÔèğ1V5N%°²kˆÚ¨"	iŸ€0FV)7_jÙ­ò­.WºªP¥Mj»z•f¤^™&µ[Ó*“Ø­ÕmŠG«ò”C7ORâ*¥RüwæÃ­ód¸ÜSQv­×u
+-ä¡ú@Špéİ´V7p¿MğãTD¦Á…U©Í±´lÖ)â&ëD78ÎøºÎÀ¥^xîãõ8Ä…+îKö¸.Õk~opÿ°0zµÑ~Ğ³õÌù g!ê¹*=QÏ%1èYˆz.çAÏBÔsÃz¢~Áb@âd!Òó= BĞÔâHV@ˆêĞd@ØQ"Â%*+a¡×s}ö;H±F Rt„ˆpû®Xˆz)ËŞ•^ìú=¤ú=Dˆ7Æ°ƒ+´üÎ„<{@„ô5-œôR÷+>ìk#®ùæï;€ë}@XØA\ìÄÂâäI¸èwj)òišİá9ÈC?Ãş‘j<¼¹ùÕÕò^Ä'ê~ïÕ”oø!»ˆ‘+zB±1ïŞ¼}óÇ(ºsczá#,®Çhnšgp~`4Â%DtGªr*Ú˜Æ/F'§%º_¨3˜ÁkÃëÂÏ«Óòs2ßìŸÿ…=p1àÚ“§ªÉk…‡tW‹ÿŞ@ŞùA„ŸwxşÓr
+\ No hay ningÃºn carÃ¡cter de nueva lÃ­nea al final del fichero
+Los ficheros binarios xv6-practico/.git/objects/19/451b56abf0c9602574d65368329fda99b0fb07 y xv6-unrc/.git/objects/19/451b56abf0c9602574d65368329fda99b0fb07 son distintos
+Los ficheros binarios xv6-practico/.git/objects/1d/245a35fcde347f78966d78147bd924316fb9e7 y xv6-unrc/.git/objects/1d/245a35fcde347f78966d78147bd924316fb9e7 son distintos
+Los ficheros binarios xv6-practico/.git/objects/1d/f01921658812b541ec3ca4946a3396adaeb34f y xv6-unrc/.git/objects/1d/f01921658812b541ec3ca4946a3396adaeb34f son distintos
+Los ficheros binarios xv6-practico/.git/objects/20/eec1a65c915ce2de06834ecfa8483682d536e9 y xv6-unrc/.git/objects/20/eec1a65c915ce2de06834ecfa8483682d536e9 son distintos
+Los ficheros binarios xv6-practico/.git/objects/25/66ef694a108638d4a7956efef71aa822309395 y xv6-unrc/.git/objects/25/66ef694a108638d4a7956efef71aa822309395 son distintos
+Los ficheros binarios xv6-practico/.git/objects/26/4ca2f26a49e376b3ee9f72fa07d13414ba46e9 y xv6-unrc/.git/objects/26/4ca2f26a49e376b3ee9f72fa07d13414ba46e9 son distintos
+Los ficheros binarios xv6-practico/.git/objects/26/700da063367d180a7882733838040835a683f6 y xv6-unrc/.git/objects/26/700da063367d180a7882733838040835a683f6 son distintos
+Los ficheros binarios xv6-practico/.git/objects/2f/6d394e9c2683631798200c6ce22fde6c9d0a8a y xv6-unrc/.git/objects/2f/6d394e9c2683631798200c6ce22fde6c9d0a8a son distintos
+Los ficheros binarios xv6-practico/.git/objects/36/26b0c76e763ed7aadcb966dbc9104d77e05cd6 y xv6-unrc/.git/objects/36/26b0c76e763ed7aadcb966dbc9104d77e05cd6 son distintos
+Los ficheros binarios xv6-practico/.git/objects/37/5a6a44bb192550c17cc7b3563cb7dced3c3e0d y xv6-unrc/.git/objects/37/5a6a44bb192550c17cc7b3563cb7dced3c3e0d son distintos
+Los ficheros binarios xv6-practico/.git/objects/38/732de5ca761ed985453c59eb3770c8d2c3b087 y xv6-unrc/.git/objects/38/732de5ca761ed985453c59eb3770c8d2c3b087 son distintos
+Los ficheros binarios xv6-practico/.git/objects/39/1418dbb5678c84a84c6cd9659fd902b84b2c4d y xv6-unrc/.git/objects/39/1418dbb5678c84a84c6cd9659fd902b84b2c4d son distintos
+Los ficheros binarios xv6-practico/.git/objects/3c/55abbe5cb9e45481b795435161e7702323b4d0 y xv6-unrc/.git/objects/3c/55abbe5cb9e45481b795435161e7702323b4d0 son distintos
+Los ficheros binarios xv6-practico/.git/objects/3f/d9f5ad1ffbaa634de6b46a2de8efae98187e73 y xv6-unrc/.git/objects/3f/d9f5ad1ffbaa634de6b46a2de8efae98187e73 son distintos
+Los ficheros binarios xv6-practico/.git/objects/41/022c83e67e57c5fcf18fb84ab637c3d298ab97 y xv6-unrc/.git/objects/41/022c83e67e57c5fcf18fb84ab637c3d298ab97 son distintos
+Los ficheros binarios xv6-practico/.git/objects/44/3c438fc33eed192b02a02731486f2628a9d6f8 y xv6-unrc/.git/objects/44/3c438fc33eed192b02a02731486f2628a9d6f8 son distintos
+Los ficheros binarios xv6-practico/.git/objects/45/d2f8c0e475246b3b6afa0586e6dda5583843a7 y xv6-unrc/.git/objects/45/d2f8c0e475246b3b6afa0586e6dda5583843a7 son distintos
+Los ficheros binarios xv6-practico/.git/objects/46/ba1e96abca60afcbbceed0097bc0d2b47ebaae y xv6-unrc/.git/objects/46/ba1e96abca60afcbbceed0097bc0d2b47ebaae son distintos
+Los ficheros binarios xv6-practico/.git/objects/49/0c2f3ab04a4d12fdacfaafd23796fa17e47b0c y xv6-unrc/.git/objects/49/0c2f3ab04a4d12fdacfaafd23796fa17e47b0c son distintos
+Los ficheros binarios xv6-practico/.git/objects/4c/604fef2d76009c5a64c792512cdfab9745a311 y xv6-unrc/.git/objects/4c/604fef2d76009c5a64c792512cdfab9745a311 son distintos
+Los ficheros binarios xv6-practico/.git/objects/4e/67a15bd0092b6529fae055d1675d248ea1f7a5 y xv6-unrc/.git/objects/4e/67a15bd0092b6529fae055d1675d248ea1f7a5 son distintos
+Los ficheros binarios xv6-practico/.git/objects/4e/8ff67d90e92061d4460582f45d311e0ca8ade3 y xv6-unrc/.git/objects/4e/8ff67d90e92061d4460582f45d311e0ca8ade3 son distintos
+Los ficheros binarios xv6-practico/.git/objects/50/1e423b5db33cb718c30b80e7638dd13c52549a y xv6-unrc/.git/objects/50/1e423b5db33cb718c30b80e7638dd13c52549a son distintos
+Los ficheros binarios xv6-practico/.git/objects/50/3e77aecb414107329ccd46f77d90fc7cb0336c y xv6-unrc/.git/objects/50/3e77aecb414107329ccd46f77d90fc7cb0336c son distintos
+Los ficheros binarios xv6-practico/.git/objects/53/66b42a84ea9d8ea8972ad6e57621919ddab9ab y xv6-unrc/.git/objects/53/66b42a84ea9d8ea8972ad6e57621919ddab9ab son distintos
+Los ficheros binarios xv6-practico/.git/objects/57/65aae44ae09444325794fda465328a876f1a57 y xv6-unrc/.git/objects/57/65aae44ae09444325794fda465328a876f1a57 son distintos
+Los ficheros binarios xv6-practico/.git/objects/58/3402a3ef75041c81ac222fedd1be348774c86f y xv6-unrc/.git/objects/58/3402a3ef75041c81ac222fedd1be348774c86f son distintos
+Los ficheros binarios xv6-practico/.git/objects/5c/15618403f60d8dfd2c247a658a619aabf5f988 y xv6-unrc/.git/objects/5c/15618403f60d8dfd2c247a658a619aabf5f988 son distintos
+diff -rupN xv6-practico/.git/objects/5d/2f998ccf2d48bf13482166f3f6c7c05513b0ff xv6-unrc/.git/objects/5d/2f998ccf2d48bf13482166f3f6c7c05513b0ff
+--- xv6-practico/.git/objects/5d/2f998ccf2d48bf13482166f3f6c7c05513b0ff	2015-06-10 19:28:47.318911101 -0300
++++ xv6-unrc/.git/objects/5d/2f998ccf2d48bf13482166f3f6c7c05513b0ff	1969-12-31 21:00:00.000000000 -0300
+@@ -1,3 +0,0 @@
+-xAN!E]sŠº€
+-ºh0f2[wÆë¢(”DÓ÷·7ã\şŸÿ_òdôŞ&xÄ‡¹«‚TÁœS	6p­k^Š["V+! q.-s¨æ›wİ&°FQdM6“ÙU/L6DJ”«õI¥û>)afwÒ
+-Ÿ`£‹l‘¥ÅÅ¼Æ”Wb2ü3?ÇÛØ…6ù€ç­É¸üåÛGçöu‘Ñ¯€‹÷i%ïVx´ŞZs¶§ÖÔÌûË+Œ:'åéî	oÊ¥+ôQZmÂe˜_Û,b]
+\ No hay ningÃºn carÃ¡cter de nueva lÃ­nea al final del fichero
+Los ficheros binarios xv6-practico/.git/objects/60/2aad2cdcf33ded0ceaadb23cffc0449f82f0bb y xv6-unrc/.git/objects/60/2aad2cdcf33ded0ceaadb23cffc0449f82f0bb son distintos
+Los ficheros binarios xv6-practico/.git/objects/64/2b0442d4ee102db189b9412db4fd6e746f04c5 y xv6-unrc/.git/objects/64/2b0442d4ee102db189b9412db4fd6e746f04c5 son distintos
+Los ficheros binarios xv6-practico/.git/objects/68/0cd92be84fd87368fb95fbd984d700b7a91f1f y xv6-unrc/.git/objects/68/0cd92be84fd87368fb95fbd984d700b7a91f1f son distintos
+Los ficheros binarios xv6-practico/.git/objects/6a/19fc30187644c3a88c2b1385c75195c61919b0 y xv6-unrc/.git/objects/6a/19fc30187644c3a88c2b1385c75195c61919b0 son distintos
+Los ficheros binarios xv6-practico/.git/objects/6a/a882c78c08311175e9c3a71da0c094f51c8055 y xv6-unrc/.git/objects/6a/a882c78c08311175e9c3a71da0c094f51c8055 son distintos
+Los ficheros binarios xv6-practico/.git/objects/6e/a53f4bb4064cad23c13e6dbb87fe503f6ead42 y xv6-unrc/.git/objects/6e/a53f4bb4064cad23c13e6dbb87fe503f6ead42 son distintos
+Los ficheros binarios xv6-practico/.git/objects/79/d36203d82870032a13c1a2af48dcc9dc4dd3cb y xv6-unrc/.git/objects/79/d36203d82870032a13c1a2af48dcc9dc4dd3cb son distintos
+Los ficheros binarios xv6-practico/.git/objects/7b/cfb1c892271b9778a926a631861180629d22ad y xv6-unrc/.git/objects/7b/cfb1c892271b9778a926a631861180629d22ad son distintos
+Los ficheros binarios xv6-practico/.git/objects/7c/ba14b2215af15bdc9a3e99fa99907da4a0eb40 y xv6-unrc/.git/objects/7c/ba14b2215af15bdc9a3e99fa99907da4a0eb40 son distintos
+Los ficheros binarios xv6-practico/.git/objects/80/2ec8db08c499cc861d092457dcacb16265e266 y xv6-unrc/.git/objects/80/2ec8db08c499cc861d092457dcacb16265e266 son distintos
+Los ficheros binarios xv6-practico/.git/objects/80/8bc3296bcb9422cb15402fc35e45ba26197f59 y xv6-unrc/.git/objects/80/8bc3296bcb9422cb15402fc35e45ba26197f59 son distintos
+Los ficheros binarios xv6-practico/.git/objects/84/efaf5f13c9cc40cfd8ebc3776e9bb7ca87487d y xv6-unrc/.git/objects/84/efaf5f13c9cc40cfd8ebc3776e9bb7ca87487d son distintos
+Los ficheros binarios xv6-practico/.git/objects/8c/9c4f0852391dfb9ef3279f68d36e2b846c91b2 y xv6-unrc/.git/objects/8c/9c4f0852391dfb9ef3279f68d36e2b846c91b2 son distintos
+Los ficheros binarios xv6-practico/.git/objects/8f/72d65c45499d93a89d31ccd7053407e20f7d5e y xv6-unrc/.git/objects/8f/72d65c45499d93a89d31ccd7053407e20f7d5e son distintos
+Los ficheros binarios xv6-practico/.git/objects/91/964f14a1917ec3f547f43c01fafd859c8420bd y xv6-unrc/.git/objects/91/964f14a1917ec3f547f43c01fafd859c8420bd son distintos
+Los ficheros binarios xv6-practico/.git/objects/92/1ddd259d3af74eaa56859255e21ab424c80489 y xv6-unrc/.git/objects/92/1ddd259d3af74eaa56859255e21ab424c80489 son distintos
+Los ficheros binarios xv6-practico/.git/objects/93/1b947fcfb6034f1ae0204794d20af64edbdcf3 y xv6-unrc/.git/objects/93/1b947fcfb6034f1ae0204794d20af64edbdcf3 son distintos
+Los ficheros binarios xv6-practico/.git/objects/93/dbe288dfde166630b90282ff81a52dffeb1b89 y xv6-unrc/.git/objects/93/dbe288dfde166630b90282ff81a52dffeb1b89 son distintos
+Los ficheros binarios xv6-practico/.git/objects/96/7841357201e9a6fe455b02805d9b96da73bc5e y xv6-unrc/.git/objects/96/7841357201e9a6fe455b02805d9b96da73bc5e son distintos
+Los ficheros binarios xv6-practico/.git/objects/96/b0178e7c32241823f6e969dab07a12efba1c77 y xv6-unrc/.git/objects/96/b0178e7c32241823f6e969dab07a12efba1c77 son distintos
+Los ficheros binarios xv6-practico/.git/objects/99/f934c8d7546109d0da0f83fad69f534b7c5ddd y xv6-unrc/.git/objects/99/f934c8d7546109d0da0f83fad69f534b7c5ddd son distintos
+diff -rupN xv6-practico/.git/objects/9a/ae25ba70bf70cdc5c4546a0ba6b5929ac21e9c xv6-unrc/.git/objects/9a/ae25ba70bf70cdc5c4546a0ba6b5929ac21e9c
+--- xv6-practico/.git/objects/9a/ae25ba70bf70cdc5c4546a0ba6b5929ac21e9c	2015-06-10 19:28:47.194912806 -0300
++++ xv6-unrc/.git/objects/9a/ae25ba70bf70cdc5c4546a0ba6b5929ac21e9c	1969-12-31 21:00:00.000000000 -0300
+@@ -1,6 +0,0 @@
+-xV[lU>gÆN¦Iš4)A¹LĞ ğ¸mJ	…–ĞÑvQ´€@eìŒã	ÎLjC©¨(—ZåV$. Šà¡ .»/D‚‚Z`µêRO $Ğj³›]­XVZDáûÎœc»À¿|Î÷ıç¿œû*qÁY;"î»é:)¥0"…-Zšot§–u
+-†Äéb@Œ7æ÷şÇÙ?îìë)5ÆOîû¾ï”¹ñ“ßûHY3ûÇœRcìdßÜØÉÒ+Œ%ë{çÈ¶©Á…Ã‹‹‹{?v”íè‚ÃÖòËpYx%5¨Hğ.Ò8úÙßÇÿ¼ñaß\–‰÷ÍÙ¶ğ´òÍ(ßò"Ú‘¸˜Æ+5Í¸=m™êŸrÆ4wáy…æğœæ6ø ñ/DÊ…­¥Ùl­Z©ú¿ŸÔ<¦ìT×j}}®yø'¦=Íù1¥êÛ©ª'WÚûıb²\+jo*;æybñ5¬‡…a	‘‘GQsyD…dVipÈtî€jÿ‰•u9jËê\OåVª¶¤ãBÉÜJ®Pç‚RäÃ¨²‡ÉV\ŠÚ: ²+•¶Ii‘ÙJ2 Q@A‘GPeçPY:ªãZhÛP:îÔDtÊ~zœ%ö8ÊŠü•VwÂ@Š;@C,ÉdÃ(AàZ%ƒ8ÑC@ù<HÇ‹`ª—·yÏ¿ò™!_ò!?Òƒd*ÏJCV2lÈfC¶²D´ËC"«sÏÚ¨0¼~yaïòn»weo¿Ë:`¿@twoBöa…°{7t_Ù}Ãrìƒ'SeU]G;İÜ#ÑÍ6¬.Ìµñ€ır,¼ºç7cÄ8ibÆ,Ñ]:Bt­;%[:HÔ–H2˜î½âñÅë‘ûL€êç¡°8˜r‡è+^wˆÜäö8êEİFRîS¼î¹ÇíqÔŸĞmÄ)wˆuIßºCä¹h;[ù¡Í¡7/	[w¢Xbµ”'z—¢VÏ ²H±kd½W¦ÓLXÄÑô8^‘Ü;ÔÒfìÅ&{…tò2–½Û;ö’3èì]»ÑZµ|xÓ¼3ôşv×»ïÏÏÿóßïÿÇ1'oYè¢™$
+-vD~¡ˆ	?ñE=ª…“Q0áË~U ëi¿v·¨•ãjâ6m¼uå€èZ(Ÿ¸ZátÉ—ãé …Å8?…³AµNøùíuc×ÿèÏqş–°–w·ÎU?	gãZ~×ìúÜLÕ/&uÕµP=Ì`âú›Çİ-î:ï
+-o­››f•Ô£`ãdÕ°Õ¯ËÃËFÖ»¹Iü&îñ«¥ü¶®vs¥(ÎaÌ))ÔÃJF©RKäüJè×Â¥Y¿šK0»­æü—i:ˆ’ZO‡I®Tõ§ƒÜLŒùU“	08	ŠI\âú-[6¸C×…ĞÒiäÖ¬¾8eÜÑÓXAäî?yŸ#Wöd2ûp&xšX(¼âš^ç!kóÒìíGj»JÛøò5íÖ¨r`ì(¼|%šör+ş>4ó´/´Û­¿§^íŞéÄ/+•bÙ°jPñ’`W"<u†¼B­&<6N…úä0*Å0)î
+-Õ`Öh•¸ØîèWıh28%¶FñFwÂ+ÆÓ\váEXR§!WK°Äiš ¼CíÇÿÁ6%#¾]l* §şã Î7¨%6n0Ş2%ék$EŸÖyùŸå m\{\4Ô-±…úãĞl°Eg““ØÏc›Ø‚Ÿ›–ØBÿ	ÒM¶XÚ2‚ÙÍÑ¤Í¶Xö{¯8-fï0>³×Ô[/ºÈææ·]ğÖK¦Ş5È!±T»5şi¨OhÄ'GğËÙCÄû5®ñL"¯<qç!mÏiÜ ñj7iÜ®ñV"ây¾‰w±aSDô»Kã#9oú=¥ñ"üáÿ–nçÿ	ú}¨ÛiıŸ÷/­Ÿ "Şâü×¡±‹¿Ó´~Æ‹4æ5h¼FãoÑx‡Æ@c¤ñ{464>¥ñ"ÆuˆˆıQû‚#ÇSÂqjtøJ(x—Ö÷hü.áW]©~Àÿîæï!uÚ(ü_Ç“>ŠB9Åâ†òáw“7ãB­cèJ^G¯)†_‚ú¿7LGÚÓ¨á4ÑïÍ¶CWÃÖ>¾/¡<#ÇÇmÆ7
+-nb@ÅmÀË$ZŒífè†Óôü¾&ÑblwB7œ¦/Ğ‘K¢ÅØnƒŞ>¾Ï÷”ãc»ß¸‰?ÀP'ÑblèíùD>®'óñ2ùø`×‡c1ö˜$ĞIYÔ}¿ÿâà©oÚ(ÆïIÍU#ª¥§>Ê¶WQcö{ü£AÇG9ˆÒ>G1xmœÇ23¾Gæ¬€ŠCÈÇ»o„}QÚû¤~+e5ù­fæc^öÙoxÖŒ˜|?L…Gï
+\ No hay ningÃºn carÃ¡cter de nueva lÃ­nea al final del fichero
+Los ficheros binarios xv6-practico/.git/objects/9b/052cf2bb590f77fe58df02fc1ceeeeaea6de2c y xv6-unrc/.git/objects/9b/052cf2bb590f77fe58df02fc1ceeeeaea6de2c son distintos
+Los ficheros binarios xv6-practico/.git/objects/9b/b7e86c9f52e6a7363fa953393275cc7edad94a y xv6-unrc/.git/objects/9b/b7e86c9f52e6a7363fa953393275cc7edad94a son distintos
+Los ficheros binarios xv6-practico/.git/objects/9e/51ba2661d590b60828a015659428b789b73689 y xv6-unrc/.git/objects/9e/51ba2661d590b60828a015659428b789b73689 son distintos
+Los ficheros binarios xv6-practico/.git/objects/9e/7edb39f31ff890568b23ed61335e8190eed9c2 y xv6-unrc/.git/objects/9e/7edb39f31ff890568b23ed61335e8190eed9c2 son distintos
+Los ficheros binarios xv6-practico/.git/objects/a4/0d56ded6609b12f56a08618c2cb832810d96fe y xv6-unrc/.git/objects/a4/0d56ded6609b12f56a08618c2cb832810d96fe son distintos
+Los ficheros binarios xv6-practico/.git/objects/a4/d7b56e7b39c141cad617129adce5549df9173b y xv6-unrc/.git/objects/a4/d7b56e7b39c141cad617129adce5549df9173b son distintos
+Los ficheros binarios xv6-practico/.git/objects/a5/c60a6fe4f54d74a7633e5dcd630e95e5b6a249 y xv6-unrc/.git/objects/a5/c60a6fe4f54d74a7633e5dcd630e95e5b6a249 son distintos
+Los ficheros binarios xv6-practico/.git/objects/a5/fddafe56459eefd09f2bec6f9bb258e1780617 y xv6-unrc/.git/objects/a5/fddafe56459eefd09f2bec6f9bb258e1780617 son distintos
+Los ficheros binarios xv6-practico/.git/objects/a6/859780b6909419867dd52f2fbd749ef1f980ed y xv6-unrc/.git/objects/a6/859780b6909419867dd52f2fbd749ef1f980ed son distintos
+Los ficheros binarios xv6-practico/.git/objects/a6/9fc7e8d35913bb6dc4a2642f07d6abee9726ce y xv6-unrc/.git/objects/a6/9fc7e8d35913bb6dc4a2642f07d6abee9726ce son distintos
+Los ficheros binarios xv6-practico/.git/objects/a8/cbb8fcd18b98583ab46fea9faac6af5bb4998f y xv6-unrc/.git/objects/a8/cbb8fcd18b98583ab46fea9faac6af5bb4998f son distintos
+Los ficheros binarios xv6-practico/.git/objects/ab/0bdf42b10f5b0eca76d8b0c39275b0f094f3bf y xv6-unrc/.git/objects/ab/0bdf42b10f5b0eca76d8b0c39275b0f094f3bf son distintos
+Los ficheros binarios xv6-practico/.git/objects/ae/15354bb760034075df50d9ea0a54eff8dabc76 y xv6-unrc/.git/objects/ae/15354bb760034075df50d9ea0a54eff8dabc76 son distintos
+Los ficheros binarios xv6-practico/.git/objects/b3/906ff6750036d36ada9255d582068c513b39b3 y xv6-unrc/.git/objects/b3/906ff6750036d36ada9255d582068c513b39b3 son distintos
+Los ficheros binarios xv6-practico/.git/objects/b6/121034a58fc178b529d55adea5e0c51ca86c23 y xv6-unrc/.git/objects/b6/121034a58fc178b529d55adea5e0c51ca86c23 son distintos
+Los ficheros binarios xv6-practico/.git/objects/b6/efa124b2e41caebf32083efb710719868b8201 y xv6-unrc/.git/objects/b6/efa124b2e41caebf32083efb710719868b8201 son distintos
+Los ficheros binarios xv6-practico/.git/objects/b8/ed7f6fb908a0c3d7478aa91a1248dbc43ed17c y xv6-unrc/.git/objects/b8/ed7f6fb908a0c3d7478aa91a1248dbc43ed17c son distintos
+Los ficheros binarios xv6-practico/.git/objects/b9/4af790da40c29b5406811d06c5c1e8a012d792 y xv6-unrc/.git/objects/b9/4af790da40c29b5406811d06c5c1e8a012d792 son distintos
+Los ficheros binarios xv6-practico/.git/objects/b9/c15116717516d91082d38c7c4c00145315ac17 y xv6-unrc/.git/objects/b9/c15116717516d91082d38c7c4c00145315ac17 son distintos
+Los ficheros binarios xv6-practico/.git/objects/ba/3101f502b612818fad640bffd2c693f661aece y xv6-unrc/.git/objects/ba/3101f502b612818fad640bffd2c693f661aece son distintos
+Los ficheros binarios xv6-practico/.git/objects/ba/60bf5ca1ca3b278b772d192d93df7802958278 y xv6-unrc/.git/objects/ba/60bf5ca1ca3b278b772d192d93df7802958278 son distintos
+Los ficheros binarios xv6-practico/.git/objects/bc/6ee0029ae627e6f2c9261d1cdf75933c6a1894 y xv6-unrc/.git/objects/bc/6ee0029ae627e6f2c9261d1cdf75933c6a1894 son distintos
+Los ficheros binarios xv6-practico/.git/objects/bd/1d90a9ca7160322c805e839126c2e906191a31 y xv6-unrc/.git/objects/bd/1d90a9ca7160322c805e839126c2e906191a31 son distintos
+Los ficheros binarios xv6-practico/.git/objects/bd/f3a79c1ac62d29cfbba8ef238c20dd3f5654e7 y xv6-unrc/.git/objects/bd/f3a79c1ac62d29cfbba8ef238c20dd3f5654e7 son distintos
+Los ficheros binarios xv6-practico/.git/objects/bf/00324c87e613d78060b526e1c5ac1259a6136e y xv6-unrc/.git/objects/bf/00324c87e613d78060b526e1c5ac1259a6136e son distintos
+Los ficheros binarios xv6-practico/.git/objects/c0/3ffe55bb88cd423ea61405bd819aad69f20f4d y xv6-unrc/.git/objects/c0/3ffe55bb88cd423ea61405bd819aad69f20f4d son distintos
+Los ficheros binarios xv6-practico/.git/objects/c2/2ebc29cf5d2218873f8fcdbd4d3ab71f8d7f3f y xv6-unrc/.git/objects/c2/2ebc29cf5d2218873f8fcdbd4d3ab71f8d7f3f son distintos
+Los ficheros binarios xv6-practico/.git/objects/c2/30482cee22ac15503f537e7741dbcd70351f7b y xv6-unrc/.git/objects/c2/30482cee22ac15503f537e7741dbcd70351f7b son distintos
+Los ficheros binarios xv6-practico/.git/objects/c4/9fb469b74d3c16a94ae691ff6be41ac5357c4c y xv6-unrc/.git/objects/c4/9fb469b74d3c16a94ae691ff6be41ac5357c4c son distintos
+Los ficheros binarios xv6-practico/.git/objects/c6/8edd7c3365af55941733f9c8dd42855d2f6676 y xv6-unrc/.git/objects/c6/8edd7c3365af55941733f9c8dd42855d2f6676 son distintos
+Los ficheros binarios xv6-practico/.git/objects/c7/3606bea1339b16d42de377cf13eea406dc1f1d y xv6-unrc/.git/objects/c7/3606bea1339b16d42de377cf13eea406dc1f1d son distintos
+Los ficheros binarios xv6-practico/.git/objects/ca/559a61d3e1160c71e089c3fed157cba9bd6986 y xv6-unrc/.git/objects/ca/559a61d3e1160c71e089c3fed157cba9bd6986 son distintos
+Los ficheros binarios xv6-practico/.git/objects/ce/fa7fd88698eb3d3086aa17dbdb5403711ba912 y xv6-unrc/.git/objects/ce/fa7fd88698eb3d3086aa17dbdb5403711ba912 son distintos
+Los ficheros binarios xv6-practico/.git/objects/cf/c1bb9d606aff7b4d2481f0c6615dc229418b6f y xv6-unrc/.git/objects/cf/c1bb9d606aff7b4d2481f0c6615dc229418b6f son distintos
+Los ficheros binarios xv6-practico/.git/objects/cf/e6d54f01ac7034611e3fd5fcf8cb27d0159674 y xv6-unrc/.git/objects/cf/e6d54f01ac7034611e3fd5fcf8cb27d0159674 son distintos
+Los ficheros binarios xv6-practico/.git/objects/d0/c2806e2f0102c9a630d6bc2c2c4eb94812c774 y xv6-unrc/.git/objects/d0/c2806e2f0102c9a630d6bc2c2c4eb94812c774 son distintos
+Los ficheros binarios xv6-practico/.git/objects/d1/50066a6f344db3937aecf0f20ff7550ff5c61f y xv6-unrc/.git/objects/d1/50066a6f344db3937aecf0f20ff7550ff5c61f son distintos
+Los ficheros binarios xv6-practico/.git/objects/d1/c2490715ae7f952fd7bbd6522b5759f2f7d404 y xv6-unrc/.git/objects/d1/c2490715ae7f952fd7bbd6522b5759f2f7d404 son distintos
+Los ficheros binarios xv6-practico/.git/objects/d2/54dce7b525f038fee37b641668444e2c53d176 y xv6-unrc/.git/objects/d2/54dce7b525f038fee37b641668444e2c53d176 son distintos
+Los ficheros binarios xv6-practico/.git/objects/d4/1487cd4cf41e89d686851e20c0968a1c488fec y xv6-unrc/.git/objects/d4/1487cd4cf41e89d686851e20c0968a1c488fec son distintos
+Los ficheros binarios xv6-practico/.git/objects/d5/f9102568526c0bbd73faa696eb76b83e4581cf y xv6-unrc/.git/objects/d5/f9102568526c0bbd73faa696eb76b83e4581cf son distintos
+Los ficheros binarios xv6-practico/.git/objects/d6/bfd2230d9f56941b57549e7ba020c631584ad9 y xv6-unrc/.git/objects/d6/bfd2230d9f56941b57549e7ba020c631584ad9 son distintos
+Los ficheros binarios xv6-practico/.git/objects/d8/0d1c22fde3c4c1c7effe5ba8488a65ace99102 y xv6-unrc/.git/objects/d8/0d1c22fde3c4c1c7effe5ba8488a65ace99102 son distintos
+Los ficheros binarios xv6-practico/.git/objects/d8/ec9423bf0b39505c52e95d740fedb764a87c6c y xv6-unrc/.git/objects/d8/ec9423bf0b39505c52e95d740fedb764a87c6c son distintos
+Los ficheros binarios xv6-practico/.git/objects/d9/dff2d48a24f9e08a90333545f74c728812d2a7 y xv6-unrc/.git/objects/d9/dff2d48a24f9e08a90333545f74c728812d2a7 son distintos
+Los ficheros binarios xv6-practico/.git/objects/da/5cd5468d509ed10b8acd8961ad6bda5d6ae7d6 y xv6-unrc/.git/objects/da/5cd5468d509ed10b8acd8961ad6bda5d6ae7d6 son distintos
+Los ficheros binarios xv6-practico/.git/objects/dd/a6885a3d22477c5b45a51e92262888120919b1 y xv6-unrc/.git/objects/dd/a6885a3d22477c5b45a51e92262888120919b1 son distintos
+Los ficheros binarios xv6-practico/.git/objects/e1/9d90f596a11037717bf22e1c5e9ba595d4f110 y xv6-unrc/.git/objects/e1/9d90f596a11037717bf22e1c5e9ba595d4f110 son distintos
+Los ficheros binarios xv6-practico/.git/objects/e5/db0df69221b9e14dd43a2f8a459bd4d3afe52b y xv6-unrc/.git/objects/e5/db0df69221b9e14dd43a2f8a459bd4d3afe52b son distintos
+Los ficheros binarios xv6-practico/.git/objects/e7/0849a1481de5e04a8cec04aed572542c3dd390 y xv6-unrc/.git/objects/e7/0849a1481de5e04a8cec04aed572542c3dd390 son distintos
+Los ficheros binarios xv6-practico/.git/objects/e7/1367a49130625b2f052917b62603548aabdada y xv6-unrc/.git/objects/e7/1367a49130625b2f052917b62603548aabdada son distintos
+Los ficheros binarios xv6-practico/.git/objects/e7/792f57cbaf8347c2672ef4bce558f9119e88de y xv6-unrc/.git/objects/e7/792f57cbaf8347c2672ef4bce558f9119e88de son distintos
+Los ficheros binarios xv6-practico/.git/objects/e9/b0dab625f5e127bb900055139c28cc5ee16d68 y xv6-unrc/.git/objects/e9/b0dab625f5e127bb900055139c28cc5ee16d68 son distintos
+Los ficheros binarios xv6-practico/.git/objects/eb/474d2678672204ab51ff7364ee05326466b937 y xv6-unrc/.git/objects/eb/474d2678672204ab51ff7364ee05326466b937 son distintos
+Los ficheros binarios xv6-practico/.git/objects/ee/debe4a3b8f6788fcdc68e01c66dfd11f5874f3 y xv6-unrc/.git/objects/ee/debe4a3b8f6788fcdc68e01c66dfd11f5874f3 son distintos
+Los ficheros binarios xv6-practico/.git/objects/f3/6252e467275c4a4556ccfe6fc427e362366c4c y xv6-unrc/.git/objects/f3/6252e467275c4a4556ccfe6fc427e362366c4c son distintos
+Los ficheros binarios xv6-practico/.git/objects/f6/48b5e07004ea67d0b091531242b61ad2c34541 y xv6-unrc/.git/objects/f6/48b5e07004ea67d0b091531242b61ad2c34541 son distintos
+Los ficheros binarios xv6-practico/.git/objects/fa/684d5eadbdd5a3d2069c778115dacdfdbba9e1 y xv6-unrc/.git/objects/fa/684d5eadbdd5a3d2069c778115dacdfdbba9e1 son distintos
+Los ficheros binarios xv6-practico/.git/objects/fb/60cee1f796671e09d146bd7a66a44a27d44ef1 y xv6-unrc/.git/objects/fb/60cee1f796671e09d146bd7a66a44a27d44ef1 son distintos
+Los ficheros binarios xv6-practico/.git/objects/pack/pack-19307c468a8bb414cfa3d5d0fe89026961ca3f5d.idx y xv6-unrc/.git/objects/pack/pack-19307c468a8bb414cfa3d5d0fe89026961ca3f5d.idx son distintos
+Los ficheros binarios xv6-practico/.git/objects/pack/pack-19307c468a8bb414cfa3d5d0fe89026961ca3f5d.pack y xv6-unrc/.git/objects/pack/pack-19307c468a8bb414cfa3d5d0fe89026961ca3f5d.pack son distintos
+Los ficheros binarios xv6-practico/.git/objects/pack/pack-2741e182402f103ba8f326f3e86de5625172bfc6.idx y xv6-unrc/.git/objects/pack/pack-2741e182402f103ba8f326f3e86de5625172bfc6.idx son distintos
+Los ficheros binarios xv6-practico/.git/objects/pack/pack-2741e182402f103ba8f326f3e86de5625172bfc6.pack y xv6-unrc/.git/objects/pack/pack-2741e182402f103ba8f326f3e86de5625172bfc6.pack son distintos
+Los ficheros binarios xv6-practico/.git/objects/pack/pack-41d54a0f23d565f95a06ca76bb4841e5abd7e497.idx y xv6-unrc/.git/objects/pack/pack-41d54a0f23d565f95a06ca76bb4841e5abd7e497.idx son distintos
+Los ficheros binarios xv6-practico/.git/objects/pack/pack-41d54a0f23d565f95a06ca76bb4841e5abd7e497.pack y xv6-unrc/.git/objects/pack/pack-41d54a0f23d565f95a06ca76bb4841e5abd7e497.pack son distintos
+diff -rupN xv6-practico/.git/ORIG_HEAD xv6-unrc/.git/ORIG_HEAD
+--- xv6-practico/.git/ORIG_HEAD	2015-06-10 19:28:41.386993144 -0300
++++ xv6-unrc/.git/ORIG_HEAD	1969-12-31 21:00:00.000000000 -0300
+@@ -1 +0,0 @@
+-ae8ce1ae90b526f1a2f3ca5068e8e55bf039e259
+diff -rupN xv6-practico/.git/packed-refs xv6-unrc/.git/packed-refs
+--- xv6-practico/.git/packed-refs	2015-05-17 18:44:31.015148000 -0300
++++ xv6-unrc/.git/packed-refs	1969-12-31 21:00:00.000000000 -0300
+@@ -1,2 +0,0 @@
+-# pack-refs with: peeled fully-peeled 
+-7fd874bedd111eb3c710c059a1a841659f327033 refs/remotes/origin/master
+diff -rupN xv6-practico/.git/refs/heads/master xv6-unrc/.git/refs/heads/master
+--- xv6-practico/.git/refs/heads/master	2015-06-10 19:29:30.678334856 -0300
++++ xv6-unrc/.git/refs/heads/master	1969-12-31 21:00:00.000000000 -0300
+@@ -1 +0,0 @@
+-1bf101ce76c125b61ffa65da6e3ebb6e866ee2af
+diff -rupN xv6-practico/.git/refs/remotes/origin/HEAD xv6-unrc/.git/refs/remotes/origin/HEAD
+--- xv6-practico/.git/refs/remotes/origin/HEAD	2015-05-17 18:44:31.015148000 -0300
++++ xv6-unrc/.git/refs/remotes/origin/HEAD	1969-12-31 21:00:00.000000000 -0300
+@@ -1 +0,0 @@
+-ref: refs/remotes/origin/master
+diff -rupN xv6-practico/.git/refs/remotes/origin/master xv6-unrc/.git/refs/remotes/origin/master
+--- xv6-practico/.git/refs/remotes/origin/master	2015-06-10 19:28:41.342993756 -0300
++++ xv6-unrc/.git/refs/remotes/origin/master	1969-12-31 21:00:00.000000000 -0300
+@@ -1 +0,0 @@
+-1bf101ce76c125b61ffa65da6e3ebb6e866ee2af
+diff -rupN xv6-practico/.git/refs/stash xv6-unrc/.git/refs/stash
+--- xv6-practico/.git/refs/stash	2015-06-10 19:28:47.322911046 -0300
++++ xv6-unrc/.git/refs/stash	1969-12-31 21:00:00.000000000 -0300
+@@ -1 +0,0 @@
+-5d2f998ccf2d48bf13482166f3f6c7c05513b0ff
+diff -rupN xv6-practico/Makefile xv6-unrc/Makefile
+--- xv6-practico/Makefile	2015-06-10 20:58:01.820396129 -0300
++++ xv6-unrc/Makefile	2015-04-08 16:00:19.000000000 -0300
+@@ -15,14 +15,12 @@ OBJS = \
+ 	picirq.o\
+ 	pipe.o\
+ 	proc.o\
+-	semaphore.o\
+ 	spinlock.o\
+ 	string.o\
+ 	swtch.o\
+ 	syscall.o\
+ 	sysfile.o\
+ 	sysproc.o\
+-	syssemaphore.o\
+ 	timer.o\
+ 	trapasm.o\
+ 	trap.o\
+@@ -174,11 +172,6 @@ UPROGS=\
+ 	_usertests\
+ 	_wc\
+ 	_zombie\
+-	_cmillion\
+-	_cmillion2\
+-	_semaphoreexample\
+-	_prodcon\
+-	_recursive\
+ 
+ fs.img: mkfs README $(UPROGS)
+ 	./mkfs fs.img README $(UPROGS)
+diff -rupN xv6-practico/param.h xv6-unrc/param.h
+--- xv6-practico/param.h	2015-06-10 20:55:30.225499379 -0300
++++ xv6-unrc/param.h	2015-04-08 15:02:06.000000000 -0300
+@@ -10,8 +10,4 @@
+ #define MAXOPBLOCKS  10  // max # of blocks any FS op writes
+ #define LOGSIZE      (MAXOPBLOCKS*3)  // max data sectors in on-disk log
+ #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
+-#define MLF_SIZE     4   //size of multilevel
+-#define QUANTUM      3   //quantum
+-#define MAXSEM       20  // maximum quantity of semaphores in system
+-#define MAXSEMPROC   5   //  maximum quantity of semaphores per process
+-#define MAXPAGES    3   // maximum allocated pages
++
+diff -rupN xv6-practico/proc.c xv6-unrc/proc.c
+--- xv6-practico/proc.c	2015-06-08 20:44:43.824683257 -0300
++++ xv6-unrc/proc.c	2015-04-08 15:02:06.000000000 -0300
+@@ -10,7 +10,6 @@
+ struct {
+   struct spinlock lock;
+   struct proc proc[NPROC];
+-  struct mlfnode mlf[MLF_SIZE];
+ } ptable;
+ 
+ static struct proc *initproc;
+@@ -48,8 +47,6 @@ allocproc(void)
+ found:
+   p->state = EMBRYO;
+   p->pid = nextpid++;
+-  p->priority = 0;
+-  p->next = 0;
+   release(&ptable.lock);
+ 
+   // Allocate kernel stack.
+@@ -76,44 +73,6 @@ found:
+   return p;
+ }
+ 
+-
+-//reports if the queue is empty
+-//1 = true
+-int is_empty(int i){
+-  return (ptable.mlf[i].first == 0);
+-}
+-
+-// enqueue in mlf[priority]
+-void enqueue(struct proc *p,int priority){
+-  if (!is_empty(priority)){
+-    ptable.mlf[priority].last->next = p;
+-    ptable.mlf[priority].last = p;
+-  } else {
+-    ptable.mlf[priority].first = p;
+-    ptable.mlf[priority].last = p;
+-  }
+-}
+-
+-// dequeue in mlf[priority]
+-struct proc * dequeue(int priority){
+-  struct proc *p = 0;
+-  if (!is_empty(priority)){
+-    if (ptable.mlf[priority].first == ptable.mlf[priority].last){ 
+-      p = ptable.mlf[priority].first;
+-      ptable.mlf[priority].first = 0;
+-      ptable.mlf[priority].last = 0;
+-      return p;
+-    } else {
+-      p = ptable.mlf[priority].first;
+-      ptable.mlf[priority].first = ptable.mlf[priority].first->next;
+-      return p;
+-    }
+-  }
+-  return p;;
+-}
+-
+-
+-
+ //PAGEBREAK: 32
+ // Set up first user process.
+ void
+@@ -139,9 +98,8 @@ userinit(void)
+ 
+   safestrcpy(p->name, "initcode", sizeof(p->name));
+   p->cwd = namei("/");
+-  p->quantum = 0;
++
+   p->state = RUNNABLE;
+-  enqueue(p,p->priority);
+ }
+ 
+ // Grow current process's memory by n bytes.
+@@ -164,7 +122,6 @@ growproc(int n)
+   return 0;
+ }
+ 
+-
+ // Create a new process copying p as the parent.
+ // Sets up stack to return as if from system call.
+ // Caller must set state of returned proc to RUNNABLE.
+@@ -199,19 +156,11 @@ fork(void)
+ 
+   safestrcpy(np->name, proc->name, sizeof(proc->name));
+  
+-  //inherits all the semaphores.
+-  for(i = 0; i < proc->squantity; i++){
+-    np->sem[i] = proc->sem[i];
+-    semget(proc->sem[i],0);
+-  }
+-  np->squantity = proc->squantity;
+-
+   pid = np->pid;
+ 
+   // lock to force the compiler to emit the np->state write last.
+   acquire(&ptable.lock);
+   np->state = RUNNABLE;
+-  enqueue(np,np->priority);
+   release(&ptable.lock);
+   
+   return pid;
+@@ -241,13 +190,6 @@ exit(void)
+   iput(proc->cwd);
+   end_op();
+   proc->cwd = 0;
+-  int i;
+-  
+-  //release all the semaphores.
+-  for(i = 0; i < proc->squantity; i++){   
+-    semfree(proc->sem[i]);
+-  }
+-  proc->squantity = 0;
+ 
+   acquire(&ptable.lock);
+ 
+@@ -323,34 +265,33 @@ wait(void)
+ void
+ scheduler(void)
+ {
++  struct proc *p;
+ 
+   for(;;){
+     // Enable interrupts on this processor.
+     sti();
+ 
+-    int level = 0;
+-    // Loop over process queue looking for process to run.
++    // Loop over process table looking for process to run.
+     acquire(&ptable.lock);
+-      while (level<MLF_SIZE){
+-        if (!is_empty(level)){ 
+-          // Switch to chosen process.  It is the process's job
+-          // to release ptable.lock and then reacquire it
+-          // before jumping back to us.
+-          proc = dequeue(level);
+-          switchuvm(proc);
+-          proc->quantum = 0;
+-          proc->state = RUNNING;
+-          swtch(&cpu->scheduler, proc->context);
+-          switchkvm();          
+-          // Process is done running for now.
+-          // It should have changed its p->state before coming back.            
+-          proc = 0;          
+-          level=0;
+-        } else {
+-          level++;
+-        }
+-      }
++    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
++      if(p->state != RUNNABLE)
++        continue;
++
++      // Switch to chosen process.  It is the process's job
++      // to release ptable.lock and then reacquire it
++      // before jumping back to us.
++      proc = p;
++      switchuvm(p);
++      p->state = RUNNING;
++      swtch(&cpu->scheduler, proc->context);
++      switchkvm();
++
++      // Process is done running for now.
++      // It should have changed its p->state before coming back.
++      proc = 0;
++    }
+     release(&ptable.lock);
++
+   }
+ }
+ 
+@@ -380,10 +321,6 @@ yield(void)
+ {
+   acquire(&ptable.lock);  //DOC: yieldlock
+   proc->state = RUNNABLE;
+-  if(proc->priority < MLF_SIZE-1){
+-    proc->priority = proc->priority + 1;
+-  }
+-  enqueue(proc,proc->priority);
+   sched();
+   release(&ptable.lock);
+ }
+@@ -453,15 +390,9 @@ wakeup1(void *chan)
+ {
+   struct proc *p;
+ 
+-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+-    if(p->state == SLEEPING && p->chan == chan){
++  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
++    if(p->state == SLEEPING && p->chan == chan)
+       p->state = RUNNABLE;
+-      if(p->priority > 0){
+-        p->priority = p->priority - 1;
+-      } 
+-      enqueue(p,p->priority);
+-    }
+-  }    
+ }
+ 
+ // Wake up all processes sleeping on chan.
+@@ -485,12 +416,9 @@ kill(int pid)
+   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+     if(p->pid == pid){
+       p->killed = 1;
+-
+       // Wake process from sleep if necessary.
+-      if(p->state == SLEEPING){
++      if(p->state == SLEEPING)
+         p->state = RUNNABLE;
+-        enqueue(p,p->priority);
+-      }
+       release(&ptable.lock);
+       return 0;
+     }
+@@ -526,7 +454,7 @@ procdump(void)
+       state = states[p->state];
+     else
+       state = "???";
+-    cprintf("%d %s %s priority: %d ", p->pid, state, p->name, p->priority);
++    cprintf("%d %s %s", p->pid, state, p->name);
+     if(p->state == SLEEPING){
+       getcallerpcs((uint*)p->context->ebp+2, pc);
+       for(i=0; i<10 && pc[i] != 0; i++)
+diff -rupN xv6-practico/proc.h xv6-unrc/proc.h
+--- xv6-practico/proc.h	2015-05-17 18:44:31.127148000 -0300
++++ xv6-unrc/proc.h	2015-04-08 15:02:06.000000000 -0300
+@@ -66,16 +66,6 @@ struct proc {
+   struct file *ofile[NOFILE];  // Open files
+   struct inode *cwd;           // Current directory
+   char name[16];               // Process name (debugging)
+-  int quantum;                 // Current clock tiks 
+-	int priority;								 //priority level mlf
+-	struct proc *next;					 //next mlf
+-  int sem[MAXSEMPROC];         //semaphores used for this process 
+-  int squantity;               //quantity of semaphores
+-};
+-
+-struct mlfnode{
+-  struct proc *first;
+-  struct proc *last;
+ };
+ 
+ // Process memory is laid out contiguously, low addresses first:
+diff -rupN xv6-practico/README xv6-unrc/README
+--- xv6-practico/README	2015-06-08 20:44:43.808683829 -0300
++++ xv6-unrc/README	2015-04-08 15:02:06.000000000 -0300
+@@ -1,14 +1,49 @@
+----------------------------------------------------------------
+------------------Materia: Sistemas Operativos------------------
+-----Grupo: Jacinto Jaimez, Nicolas Pereyra, AdriÃ¡n Galfioni----
+-------------------Fecha de entrega: 21/05/15-------------------
+--------------------------Proyecto 3----------------------------
+----------------------------------------------------------------
+-
+-Instrucciones de uso:
+-
+-1: Ingresar a la carpeta xv6-unrc
+-2: Ejecutar el comando 'make qemu'
+-3: Dentro de qemu, ejecutar comando 'semaphoreexample' (Ejemplo de utilizaciÃ³n de semaforos).
+-4: Dentro de qemu, ejecutar comando 'prodcon' (Ejemplo de productor-consumidor utilizando semaforos).
++xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
++Version 6 (v6).  xv6 loosely follows the structure and style of v6,
++but is implemented for a modern x86-based multiprocessor using ANSI C.
+ 
++ACKNOWLEDGMENTS
++
++xv6 is inspired by John Lions's Commentary on UNIX 6th Edition (Peer
++to Peer Communications; ISBN: 1-57398-013-7; 1st edition (June 14,
++2000)). See also http://pdos.csail.mit.edu/6.828/2012/v6.html, which
++provides pointers to on-line resources for v6.
++
++xv6 borrows code from the following sources:
++    JOS (asm.h, elf.h, mmu.h, bootasm.S, ide.c, console.c, and others)
++    Plan 9 (entryother.S, mp.h, mp.c, lapic.c)
++    FreeBSD (ioapic.c)
++    NetBSD (console.c)
++
++The following people have made contributions:
++    Russ Cox (context switching, locking)
++    Cliff Frey (MP)
++    Xiao Yu (MP)
++    Nickolai Zeldovich
++    Austin Clements
++
++In addition, we are grateful for the bug reports and patches contributed by
++Silas Boyd-Wickizer, Peter Froehlich, Shivam Handa, Anders Kaseorg, Eddie
++Kohler, Yandong Mao, Hitoshi Mitake, Carmi Merimovich, Joel Nider, Greg Price,
++Eldar Sehayek, Yongming Shen, Stephen Tu, and Zouchangwei.
++
++The code in the files that constitute xv6 is
++Copyright 2006-2014 Frans Kaashoek, Robert Morris, and Russ Cox.
++
++ERROR REPORTS
++
++If you spot errors or have suggestions for improvement, please send
++email to Frans Kaashoek and Robert Morris (kaashoek,rtm@csail.mit.edu). 
++
++BUILDING AND RUNNING XV6
++
++To build xv6 on an x86 ELF machine (like Linux or FreeBSD), run "make".
++On non-x86 or non-ELF machines (like OS X, even on x86), you will
++need to install a cross-compiler gcc suite capable of producing x86 ELF
++binaries.  See http://pdos.csail.mit.edu/6.828/2014/tools.html.
++Then run "make TOOLPREFIX=i386-jos-elf-".
++
++To run xv6, install the QEMU PC simulators.  To run in QEMU, run "make qemu".
++
++To create a typeset version of the code, run "make xv6.pdf".  This
++requires the "mpage" utility.  See http://www.mesa.nl/pub/mpage/.
+diff -rupN xv6-practico/semaphore.c xv6-unrc/semaphore.c
+--- xv6-practico/semaphore.c	2015-06-08 20:44:43.824683257 -0300
++++ xv6-unrc/semaphore.c	1969-12-31 21:00:00.000000000 -0300
+@@ -1,70 +0,0 @@
+-#include "types.h"
+-#include "defs.h"
+-#include "param.h"
+-#include "memlayout.h"
+-#include "mmu.h"
+-#include "x86.h"
+-#include "proc.h"
+-#include "spinlock.h"
+-#include "semaphore.h"
+-
+-
+-/*Create or obtain a descriptor of a semaphore.
+-parameters:
+-if Sem_id == -1, create a new one.
+-Return: semaphore identifier obtained or created, otherwise return a negative value indicating error. 
+--1: Sem_id > 0  the semaphore is not in use.
+--3: Sem_id = -1  no more semaphores available in the system*/
+-int semget(int sem_id, int init_value){
+-  if (sem_id == -1){
+-    if (stable.quantity == MAXSEM){
+-      return -3;
+-    }
+-    int i = 0;
+-    while (i<MAXSEM){
+-      if (stable.semaphore[i].refcount == 0){
+-        stable.semaphore[i].value = init_value;
+-        stable.semaphore[i].refcount = 1;
+-        stable.quantity++;
+-        return i;
+-      } else
+-        ++i;    
+-    }
+-    return -3;
+-  } else {
+-    if (stable.semaphore[sem_id].refcount == 0)
+-      return -1;
+-    stable.semaphore[sem_id].refcount++;      
+-    return 0;
+-  }  
+-}
+-
+-
+-/*Releases the semaphore.
+-Return -1 on error (not semaphore obtained by the process). Zero otherwise*/
+-int semfree(int sem_id){
+-  if (stable.semaphore[sem_id].refcount == 0)
+-    return -1;
+-  acquire(&stable.lock);
+-  stable.semaphore[sem_id].refcount--;
+-  if (stable.semaphore[sem_id].refcount == 0)
+-    stable.quantity--;
+-  release(&stable.lock);
+-  return 0;
+-}
+-
+-//decrease the unit value of the semaphore
+-int semdown(int sem_id){
+-  stable.semaphore[sem_id].value--;
+-  return 0;
+-}
+-
+-//Increase the unit value of the semaphore
+-int semup(int sem_id){
+-  if (stable.semaphore[sem_id].refcount == 0)
+-    return -1;
+-  acquire(&stable.lock);
+-  stable.semaphore[sem_id].value++;
+-  release(&stable.lock);
+-  return 0;
+-}
+diff -rupN xv6-practico/semaphore.h xv6-unrc/semaphore.h
+--- xv6-practico/semaphore.h	2015-06-08 20:44:43.824683257 -0300
++++ xv6-unrc/semaphore.h	1969-12-31 21:00:00.000000000 -0300
+@@ -1,10 +0,0 @@
+-struct semaphore {
+-  int value;
+-  int refcount;
+-};
+-
+-struct {
+-  struct semaphore semaphore[MAXSEM];
+-  struct spinlock lock;
+-  unsigned short quantity; //quantity of actives semaphores
+-} stable;
+\ No hay ningÃºn carÃ¡cter de nueva lÃ­nea al final del fichero
+diff -rupN xv6-practico/syscall.c xv6-unrc/syscall.c
+--- xv6-practico/syscall.c	2015-06-08 20:44:43.824683257 -0300
++++ xv6-unrc/syscall.c	2015-04-08 15:02:06.000000000 -0300
+@@ -98,12 +98,6 @@ extern int sys_unlink(void);
+ extern int sys_wait(void);
+ extern int sys_write(void);
+ extern int sys_uptime(void);
+-extern int sys_procstat(void);
+-extern int sys_set_priority(void);
+-extern int sys_semget(void);
+-extern int sys_semfree(void);
+-extern int sys_semdown(void);
+-extern int sys_semup(void);
+ 
+ static int (*syscalls[])(void) = {
+ [SYS_fork]    sys_fork,
+@@ -127,12 +121,6 @@ static int (*syscalls[])(void) = {
+ [SYS_link]    sys_link,
+ [SYS_mkdir]   sys_mkdir,
+ [SYS_close]   sys_close,
+-[SYS_procstat] sys_procstat,
+-[SYS_set_priority] sys_set_priority,
+-[SYS_semget] sys_semget,
+-[SYS_semfree] sys_semfree,
+-[SYS_semdown] sys_semdown,
+-[SYS_semup] sys_semup,
+ };
+ 
+ void
+diff -rupN xv6-practico/syscall.h xv6-unrc/syscall.h
+--- xv6-practico/syscall.h	2015-06-08 20:44:43.824683257 -0300
++++ xv6-unrc/syscall.h	2015-04-08 15:02:06.000000000 -0300
+@@ -20,9 +20,3 @@
+ #define SYS_link   19
+ #define SYS_mkdir  20
+ #define SYS_close  21
+-#define SYS_procstat 22
+-#define SYS_set_priority 23
+-#define SYS_semget     24
+-#define SYS_semfree    25
+-#define SYS_semdown    26
+-#define SYS_semup      27
+\ No hay ningÃºn carÃ¡cter de nueva lÃ­nea al final del fichero
+diff -rupN xv6-practico/sysproc.c xv6-unrc/sysproc.c
+--- xv6-practico/sysproc.c	2015-06-08 20:44:43.824683257 -0300
++++ xv6-unrc/sysproc.c	2015-04-08 15:02:06.000000000 -0300
+@@ -89,23 +89,3 @@ sys_uptime(void)
+   release(&tickslock);
+   return xticks;
+ }
+-
+-// Print a process listing to console. 
+-int
+-sys_procstat(void){  
+-  procdump();
+-  return 0;
+-}
+-
+-//change the priority
+-int
+-sys_set_priority(void){
+-  int priority;
+-  if(argint(0, &priority) < 0)
+-    return -1; 
+-  if (priority<0 || priority>MLF_SIZE-1)
+-    return -1;   
+-  proc->priority = priority;
+-  return 0;
+-}
+-
+diff -rupN xv6-practico/syssemaphore.c xv6-unrc/syssemaphore.c
+--- xv6-practico/syssemaphore.c	2015-06-08 20:44:43.824683257 -0300
++++ xv6-unrc/syssemaphore.c	1969-12-31 21:00:00.000000000 -0300
+@@ -1,101 +0,0 @@
+-#include "types.h"
+-#include "defs.h"
+-#include "param.h"
+-#include "memlayout.h"
+-#include "mmu.h"
+-#include "x86.h"
+-#include "proc.h"
+-#include "spinlock.h"
+-#include "semaphore.h"
+-
+-//private: true if semaphore belongs to proc
+-static int 
+-belong(int sem_id){
+-  int i = 0;
+-  while (i < MAXSEMPROC){
+-    if (proc->sem[i] == sem_id){
+-      return 1;
+-    }
+-    i++;
+-  }
+-  return 0;
+-}
+-
+-//Create or obtain a descriptor of a semaphore.
+-int
+-sys_semget(void){ //int sem_id, int init_value
+-  if (proc->squantity == MAXSEMPROC){
+-    return -2;
+-  } else {
+-    int sem_id;
+-    if(argint(0, &sem_id) < 0)
+-      return -4;  
+-    int init_value;
+-    if(argint(1, &init_value) < 0)
+-      return -4;    
+-    int ret = semget(sem_id, init_value);
+-    if (ret>-1){ 
+-      proc->sem[proc->squantity] = ret;
+-      proc->squantity++;
+-    } 
+-    return ret;
+-  }  
+-}
+-
+-//Releases the semaphore.
+-int
+-sys_semfree(void){ //int sem_id
+-  int sem_id;
+-  if(argint(0, &sem_id) < 0)
+-    return -4;
+-  int i = 0;
+-  if (belong(sem_id)){
+-    if (semfree(sem_id) == -1){
+-      return -1;
+-    } else {
+-      for (i=i; i<proc->squantity-1;i++){
+-        proc->sem[i] = proc->sem[i+1];
+-      }
+-      proc->squantity--;
+-      return 0;
+-    }
+-  }
+-  return -1;
+-}
+-
+-//decrease the unit value of the semaphore
+-int
+-sys_semdown(void){ //int sem_id
+-  int sem_id;
+-  if(argint(0, &sem_id) < 0)
+-      return -4;  
+-  if (belong(sem_id)){
+-    acquire(&stable.lock);
+-    while(stable.semaphore[sem_id].value == 0)
+-      sleep(proc->chan, &stable.lock);
+-    semdown(sem_id);
+-    release(&stable.lock);
+-    return 0;
+-  }
+-  return -1;  
+-}
+-
+-//Increase the unit value of the semaphore
+-int
+-sys_semup(void){ //int sem_id
+-  int sem_id;
+-  if(argint(0, &sem_id) < 0)
+-      return -1;
+-  if (belong(sem_id)){    
+-    if (semup(sem_id) == -1)
+-      return -1;
+-    else {
+-      wakeup(proc->chan);
+-      return 0;
+-    }
+-  }   
+-  return -1;
+-}
+-
+-
+-
+diff -rupN xv6-practico/trap.c xv6-unrc/trap.c
+--- xv6-practico/trap.c	2015-06-10 20:33:11.984767462 -0300
++++ xv6-unrc/trap.c	2015-04-08 15:02:06.000000000 -0300
+@@ -13,7 +13,6 @@ struct gatedesc idt[256];
+ extern uint vectors[];  // in vectors.S: array of 256 entry pointers
+ struct spinlock tickslock;
+ uint ticks;
+-int i=0;
+ 
+ void
+ tvinit(void)
+@@ -78,20 +77,7 @@ trap(struct trapframe *tf)
+             cpu->id, tf->cs, tf->eip);
+     lapiceoi();
+     break;
+-    case T_PGFLT:
+-      //if rcr2 is lower than the top of page and rcr2 is greater than the top more 32 bits 
+-      //and rcr2 is between designated size and  the process.
+-      if (proc && rcr2() >= PGROUNDUP(rcr2())-32  && rcr2() <= proc->sz && rcr2()>= proc->sz- MAXPAGES*PGSIZE )
+-        allocuvm(proc->pgdir, PGROUNDDOWN(rcr2()), PGROUNDUP(rcr2()));
+-      else{
+-        cprintf("pid %d %s: trap %d err %d on cpu %d "
+-                "eip 0x%x addr 0x%x--kill proc\n",
+-                proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
+-                rcr2());
+-        proc->killed = 1;
+-      }
+-      break;
+-
++   
+   //PAGEBREAK: 13
+   default:
+     if(proc == 0 || (tf->cs&3) == 0){
+@@ -104,9 +90,8 @@ trap(struct trapframe *tf)
+     cprintf("pid %d %s: trap %d err %d on cpu %d "
+             "eip 0x%x addr 0x%x--kill proc\n",
+             proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
+-             rcr2());
++            rcr2());
+     proc->killed = 1;
+-  
+   }
+ 
+   // Force process exit if it has been killed and is in user space.
+@@ -115,14 +100,10 @@ trap(struct trapframe *tf)
+   if(proc && proc->killed && (tf->cs&3) == DPL_USER)
+     exit();
+ 
+-  // Force process to give up CPU on third clock tick.
++  // Force process to give up CPU on clock tick.
+   // If interrupts were on while locks held, would need to check nlock.
+-  if(proc && proc->state == RUNNING && tf->trapno == T_IRQ0+IRQ_TIMER){
+-    proc->quantum++;   // increases the quantum ticks counter
+-    if (proc->quantum >= QUANTUM){ 
+-      yield();
+-    }
+-  }   
++  if(proc && proc->state == RUNNING && tf->trapno == T_IRQ0+IRQ_TIMER)
++    yield();
+ 
+   // Check if the process has been killed since we yielded
+   if(proc && proc->killed && (tf->cs&3) == DPL_USER)
+Los ficheros binarios xv6-practico/user/cmillion y xv6-unrc/user/cmillion son distintos
+diff -rupN xv6-practico/user/cmillion2.c xv6-unrc/user/cmillion2.c
+--- xv6-practico/user/cmillion2.c	2015-05-17 18:44:31.135148000 -0300
++++ xv6-unrc/user/cmillion2.c	1969-12-31 21:00:00.000000000 -0300
+@@ -1,19 +0,0 @@
+-//Count ten million
+-
+-#include "types.h"
+-#include "stat.h"
+-#include "user.h"
+-
+-
+-
+-int
+-main(int argc, char *argv[])
+-{
+-    int i = 0;
+-    while (i<10000000){
+-        i++;
+-    }
+-    set_priority(0); // change its priority
+-    procstat(); //print all process (this process ends whit priority 0 or 1)
+-    exit();
+-}
+\ No hay ningÃºn carÃ¡cter de nueva lÃ­nea al final del fichero
+diff -rupN xv6-practico/user/cmillion.c xv6-unrc/user/cmillion.c
+--- xv6-practico/user/cmillion.c	2015-06-10 20:36:19.738376416 -0300
++++ xv6-unrc/user/cmillion.c	1969-12-31 21:00:00.000000000 -0300
+@@ -1,16 +0,0 @@
+-//Count ten million	
+-
+-#include "types.h"
+-#include "stat.h"
+-#include "user.h"
+-
+-int
+-main(int argc, char *argv[])
+-{
+-  int i = 0;
+-  while (i<10000000){
+-    i++;
+-  }
+-  procstat(); //print all process (this process ends with priority 3)
+-  exit();
+-  }
+\ No hay ningÃºn carÃ¡cter de nueva lÃ­nea al final del fichero
+diff -rupN xv6-practico/user/forktest.c xv6-unrc/user/forktest.c
+--- xv6-practico/user/forktest.c	2015-05-17 18:44:31.135148000 -0300
++++ xv6-unrc/user/forktest.c	2015-04-08 15:02:06.000000000 -0300
+@@ -22,11 +22,8 @@ forktest(void)
+ 
+   for(n=0; n<N; n++){
+     pid = fork();
+-    if (n==4){
+-        procstat();
+-    }    
+     if(pid < 0)
+-      break; 
++      break;
+     if(pid == 0)
+       exit();
+   }
+diff -rupN xv6-practico/user/param.h xv6-unrc/user/param.h
+--- xv6-practico/user/param.h	2015-06-10 20:55:30.225499379 -0300
++++ xv6-unrc/user/param.h	2015-04-08 15:02:06.000000000 -0300
+@@ -10,8 +10,4 @@
+ #define MAXOPBLOCKS  10  // max # of blocks any FS op writes
+ #define LOGSIZE      (MAXOPBLOCKS*3)  // max data sectors in on-disk log
+ #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
+-#define MLF_SIZE     4   //size of multilevel
+-#define QUANTUM      3   //quantum
+-#define MAXSEM       20  // maximum quantity of semaphores in system
+-#define MAXSEMPROC   5   //  maximum quantity of semaphores per process
+-#define MAXPAGES    3   // maximum allocated pages
++
+diff -rupN xv6-practico/user/prodcon.c xv6-unrc/user/prodcon.c
+--- xv6-practico/user/prodcon.c	2015-06-08 20:44:43.824683257 -0300
++++ xv6-unrc/user/prodcon.c	1969-12-31 21:00:00.000000000 -0300
+@@ -1,100 +0,0 @@
+-#include "types.h"
+-#include "stat.h"
+-#include "user.h"
+-#include "fcntl.h"
+-
+-#define N  2
+-
+-
+-void consumer (int sFactory, int sConsumer, int pid, char path[]){
+-  int i,k,fd;
+-
+-  int j = 0;
+-  while (j<5){    
+-    semdown(sConsumer);
+-    semdown(sFactory);
+-    fd = open(path, O_RDWR);  
+-    read(fd, &k, sizeof(k));
+-    close(fd); 
+-    k--;
+-    printf(1," k=%d consumer= %d \n",k,pid); 
+-    fd = open(path, O_RDWR);
+-    write(fd, &k, sizeof(k));
+-    close(fd);
+-    i = 0;
+-    while (i<1000){
+-      i++;
+-    }
+-    semup(sFactory);
+-    j++;
+-  }   
+-}
+-
+-
+-void producer (int sFactory, int sConsumer, int pid, char path[]){
+-  int i,k,fd;
+-  int j = 0;
+-  while (j<5){
+-    i = 0;
+-    while (i<100000){
+-      i++;
+-    }
+-    semdown(sFactory);
+-    fd = open(path, O_RDWR);
+-    read(fd, &k, sizeof(k)); 
+-    close(fd);
+-    k++;
+-    printf(1," k=%d producer= %d \n",k,pid); 
+-    fd = open(path, O_RDWR);
+-    write(fd, &k, sizeof(k));
+-    close(fd);
+-    semup(sFactory);
+-    semup(sConsumer); 
+-    j++;
+-  }         
+-}
+-
+-
+-
+-int
+-main(int argc, char *argv[])
+-{
+-int sConsumer,sFactory,pid,n,k,fd; 
+-  char path[] = "factory";
+-
+-  sFactory= semget(-1,1);
+-  sConsumer= semget(-1,0);
+-  k=0;
+-  fd = open(path, O_CREATE|O_RDWR);
+-  write(fd, &k, sizeof(k));
+-  close(fd);
+-
+-for(n=0; n<N; n++){
+-    pid = fork(); 
+-    if(pid == 0){
+-      consumer(sFactory,sConsumer,getpid(),path);
+-      semfree(sFactory);
+-      semfree(sConsumer);
+-      exit();
+-    }       
+-  }  
+-
+-
+-  for(n=0; n<N; n++){
+-    pid = fork(); 
+-    if(pid == 0){
+-      producer(sFactory,sConsumer,getpid(),path);
+-      semfree(sFactory);
+-      semfree(sConsumer);
+-      exit();
+-    }       
+-  }
+- 
+-
+-  for(n=0; n<N*2; n++){
+-    wait();
+-  }
+-  semfree(sFactory);
+-  semfree(sConsumer);
+-  exit();
+-}    
+\ No hay ningÃºn carÃ¡cter de nueva lÃ­nea al final del fichero
+diff -rupN xv6-practico/user/recursive.c xv6-unrc/user/recursive.c
+--- xv6-practico/user/recursive.c	2015-06-10 21:01:44.078906284 -0300
++++ xv6-unrc/user/recursive.c	1969-12-31 21:00:00.000000000 -0300
+@@ -1,28 +0,0 @@
+-//recursive fibonacci
+-
+-#include "types.h"
+-#include "stat.h"
+-#include "user.h"
+-
+-
+-int
+-recursive(int n)
+-{  
+-  int r = 0;
+-  if (n>1){
+-    r = recursive(n-1) ;
+-    return r;
+-  } 
+-  else
+-    return 1;         
+-}
+-
+-int
+-main(int argc, char *argv[])
+-{
+-  recursive(250);
+-  printf(1,"finish 1 \n");
+-  printf(1,"the next execution maybe not work (trap 14) \n");
+-  recursive(300);
+-  exit();
+-}
+\ No hay ningÃºn carÃ¡cter de nueva lÃ­nea al final del fichero
+Los ficheros binarios xv6-practico/user/semaphoreexample y xv6-unrc/user/semaphoreexample son distintos
+diff -rupN xv6-practico/user/semaphoreexample.c xv6-unrc/user/semaphoreexample.c
+--- xv6-practico/user/semaphoreexample.c	2015-06-08 20:44:43.824683257 -0300
++++ xv6-unrc/user/semaphoreexample.c	1969-12-31 21:00:00.000000000 -0300
+@@ -1,51 +0,0 @@
+-#include "types.h"
+-#include "stat.h"
+-#include "user.h"
+-#include "fcntl.h"
+-
+-#define N  3
+-
+-//add five in a file
+-void adder (int s, int pid, char path[]){
+-  int i,k,fd;
+-  for(i = 0; i < 5; i++){
+-    semdown(s);
+-    fd = open(path, O_RDWR);
+-    read(fd, &k, sizeof(k)); 
+-    close(fd);
+-    k=k+1;
+-    printf(1," k=%d pid= %d \n",k,pid); 
+-    fd = open(path, O_RDWR);
+-    write(fd, &k, sizeof(k));
+-    close(fd);
+-    semup(s);   
+-  }
+-}
+-
+-//create N childs and each one call adder
+-int
+-main(int argc, char *argv[])
+-{
+-int s,pid,n,k,fd; 
+-  char path[] = "shared";
+-
+-  s= semget(-1,1);
+-  k=0;
+-  fd = open(path, O_CREATE|O_RDWR);
+-  write(fd, &k, sizeof(k));
+-  close(fd);
+-  for(n=0; n<N; n++){
+-    pid = fork(); 
+-    if(pid == 0){
+-      adder(s,getpid(),path);
+-      semfree(s);
+-      exit();
+-    }       
+-  }
+-
+-  for(n=0; n<N; n++){
+-    wait();
+-  }
+-  semfree(s);
+-  exit();
+-}
+\ No hay ningÃºn carÃ¡cter de nueva lÃ­nea al final del fichero
+diff -rupN xv6-practico/user/syscall.h xv6-unrc/user/syscall.h
+--- xv6-practico/user/syscall.h	2015-06-08 20:44:43.824683257 -0300
++++ xv6-unrc/user/syscall.h	2015-04-08 15:02:06.000000000 -0300
+@@ -20,9 +20,3 @@
+ #define SYS_link   19
+ #define SYS_mkdir  20
+ #define SYS_close  21
+-#define SYS_procstat 22
+-#define SYS_set_priority 23
+-#define SYS_semget     24
+-#define SYS_semfree    25
+-#define SYS_semdown    26
+-#define SYS_semup      27
+\ No hay ningÃºn carÃ¡cter de nueva lÃ­nea al final del fichero
+diff -rupN xv6-practico/user/user.h xv6-unrc/user/user.h
+--- xv6-practico/user/user.h	2015-06-08 20:44:43.824683257 -0300
++++ xv6-unrc/user/user.h	2015-04-08 15:02:06.000000000 -0300
+@@ -23,12 +23,6 @@ int getpid(void);
+ char* sbrk(int);
+ int sleep(int);
+ int uptime(void);
+-int procstat(void);
+-int set_priority(int);
+-int semget(int, int);
+-int semfree(int);
+-int semdown(int);
+-int semup(int);
+ 
+ // ulib.c
+ int stat(char*, struct stat*);
+diff -rupN xv6-practico/user/usys.S xv6-unrc/user/usys.S
+--- xv6-practico/user/usys.S	2015-06-08 20:44:43.828683114 -0300
++++ xv6-unrc/user/usys.S	2015-04-08 15:02:06.000000000 -0300
+@@ -29,9 +29,3 @@ SYSCALL(getpid)
+ SYSCALL(sbrk)
+ SYSCALL(sleep)
+ SYSCALL(uptime)
+-SYSCALL(procstat)
+-SYSCALL(set_priority)
+-SYSCALL(semget)
+-SYSCALL(semfree)
+-SYSCALL(semdown)
+-SYSCALL(semup)
+\ No hay ningÃºn carÃ¡cter de nueva lÃ­nea al final del fichero
+diff -rupN xv6-practico/vm.c xv6-unrc/vm.c
+--- xv6-practico/vm.c	2015-06-10 20:44:09.340334160 -0300
++++ xv6-unrc/vm.c	2015-04-08 15:02:06.000000000 -0300
+@@ -319,6 +319,8 @@ copyuvm(pde_t *pgdir, uint sz)
+   for(i = 0; i < sz; i += PGSIZE){
+     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+       panic("copyuvm: pte should exist");
++    if(!(*pte & PTE_P))
++      panic("copyuvm: page not present");
+     pa = PTE_ADDR(*pte);
+     flags = PTE_FLAGS(*pte);
+     if((mem = kalloc()) == 0)
