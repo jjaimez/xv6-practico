@@ -1,7 +1,7 @@
 80100000 .text
 80108cc0 .rodata
-80109374 .stab
-80109375 .stabstr
+801093b8 .stab
+801093b9 .stabstr
 8010a000 .data
 8010c5c0 .bss
 00000000 .debug_line

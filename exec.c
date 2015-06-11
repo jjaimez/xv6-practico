@@ -56,7 +56,6 @@ exec(char *path, char **argv)
   sz = PGROUNDUP(sz);   
   if((sz = allocuvm(pgdir, sz + MAXPAGES*PGSIZE, sz + (MAXPAGES +1)*PGSIZE)) == 0)
     goto bad;
-  //clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   sp = sz;
 
   // Push argument strings, prepare rest of stack in ustack.

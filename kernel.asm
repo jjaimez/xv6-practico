@@ -1619,9 +1619,9 @@ exec(char *path, char **argv)
 80100ce1:	89 45 e0             	mov    %eax,-0x20(%ebp)
   if((sz = allocuvm(pgdir, sz + MAXPAGES*PGSIZE, sz + (MAXPAGES +1)*PGSIZE)) == 0)
 80100ce4:	8b 45 e0             	mov    -0x20(%ebp),%eax
-80100ce7:	8d 90 00 40 00 00    	lea    0x4000(%eax),%edx
+80100ce7:	8d 90 00 70 00 00    	lea    0x7000(%eax),%edx
 80100ced:	8b 45 e0             	mov    -0x20(%ebp),%eax
-80100cf0:	05 00 30 00 00       	add    $0x3000,%eax
+80100cf0:	05 00 60 00 00       	add    $0x6000,%eax
 80100cf5:	83 ec 04             	sub    $0x4,%esp
 80100cf8:	52                   	push   %edx
 80100cf9:	50                   	push   %eax
@@ -1633,7 +1633,6 @@ exec(char *path, char **argv)
 80100d0c:	75 05                	jne    80100d13 <exec+0x1c4>
     goto bad;
 80100d0e:	e9 e7 01 00 00       	jmp    80100efa <exec+0x3ab>
-  //clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   sp = sz;
 80100d13:	8b 45 e0             	mov    -0x20(%ebp),%eax
 80100d16:	89 45 dc             	mov    %eax,-0x24(%ebp)
@@ -1695,8 +1694,8 @@ exec(char *path, char **argv)
 80100dac:	8d 50 03             	lea    0x3(%eax),%edx
 80100daf:	8b 45 dc             	mov    -0x24(%ebp),%eax
 80100db2:	89 84 95 40 ff ff ff 	mov    %eax,-0xc0(%ebp,%edx,4)
+  if((sz = allocuvm(pgdir, sz + MAXPAGES*PGSIZE, sz + (MAXPAGES +1)*PGSIZE)) == 0)
     goto bad;
-  //clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   sp = sz;
 
   // Push argument strings, prepare rest of stack in ustack.
@@ -14152,7 +14151,7 @@ trap(struct trapframe *tf)
 80106f38:	83 e8 0e             	sub    $0xe,%eax
 80106f3b:	83 f8 31             	cmp    $0x31,%eax
 80106f3e:	0f 87 af 01 00 00    	ja     801070f3 <trap+0x214>
-80106f44:	8b 04 85 d0 91 10 80 	mov    -0x7fef6e30(,%eax,4),%eax
+80106f44:	8b 04 85 14 92 10 80 	mov    -0x7fef6dec(,%eax,4),%eax
 80106f4b:	ff e0                	jmp    *%eax
   case T_IRQ0 + IRQ_TIMER:
     if(cpu->id == 0){
@@ -14247,7 +14246,7 @@ trap(struct trapframe *tf)
     case T_PGFLT:
       //if rcr2 is lower than the top of page and rcr2 is greater than the top more 32 bits 
       //and rcr2 is between designated size and  the process.
-      if (proc && rcr2() >= PGROUNDUP(rcr2())-32  && rcr2() <= proc->sz && rcr2()>= proc->sz- MAXPAGES*PGSIZE )
+			if (proc && rcr2() >= (PGROUNDUP(rcr2())-LIMITPS)  && rcr2() <= proc->sz && rcr2()>= proc->sz - (MAXPAGES-1)*PGSIZE ){
 80107004:	65 a1 04 00 00 00    	mov    %gs:0x4,%eax
 8010700a:	85 c0                	test   %eax,%eax
 8010700c:	0f 84 81 00 00 00    	je     80107093 <trap+0x1b4>
@@ -14256,7 +14255,7 @@ trap(struct trapframe *tf)
 80107019:	e8 24 fd ff ff       	call   80106d42 <rcr2>
 8010701e:	05 ff 0f 00 00       	add    $0xfff,%eax
 80107023:	25 00 f0 ff ff       	and    $0xfffff000,%eax
-80107028:	83 e8 20             	sub    $0x20,%eax
+80107028:	83 e8 10             	sub    $0x10,%eax
 8010702b:	39 c3                	cmp    %eax,%ebx
 8010702d:	72 64                	jb     80107093 <trap+0x1b4>
 8010702f:	e8 0e fd ff ff       	call   80106d42 <rcr2>
@@ -14269,7 +14268,7 @@ trap(struct trapframe *tf)
 80107047:	89 c2                	mov    %eax,%edx
 80107049:	65 a1 04 00 00 00    	mov    %gs:0x4,%eax
 8010704f:	8b 00                	mov    (%eax),%eax
-80107051:	2d 00 30 00 00       	sub    $0x3000,%eax
+80107051:	2d 00 50 00 00       	sub    $0x5000,%eax
 80107056:	39 c2                	cmp    %eax,%edx
 80107058:	72 39                	jb     80107093 <trap+0x1b4>
         allocuvm(proc->pgdir, PGROUNDDOWN(rcr2()), PGROUNDUP(rcr2()));
@@ -14288,7 +14287,7 @@ trap(struct trapframe *tf)
 80107085:	50                   	push   %eax
 80107086:	e8 d2 17 00 00       	call   8010885d <allocuvm>
 8010708b:	83 c4 10             	add    $0x10,%esp
-                "eip 0x%x addr 0x%x--kill proc\n",
+                "eip 0x%x addr 0x%x--kill proc \n",
                 proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
                 rcr2());
         proc->killed = 1;
@@ -14297,39 +14296,39 @@ trap(struct trapframe *tf)
 8010708e:	e9 19 01 00 00       	jmp    801071ac <trap+0x2cd>
       //if rcr2 is lower than the top of page and rcr2 is greater than the top more 32 bits 
       //and rcr2 is between designated size and  the process.
-      if (proc && rcr2() >= PGROUNDUP(rcr2())-32  && rcr2() <= proc->sz && rcr2()>= proc->sz- MAXPAGES*PGSIZE )
+			if (proc && rcr2() >= (PGROUNDUP(rcr2())-LIMITPS)  && rcr2() <= proc->sz && rcr2()>= proc->sz - (MAXPAGES-1)*PGSIZE ){
         allocuvm(proc->pgdir, PGROUNDDOWN(rcr2()), PGROUNDUP(rcr2()));
-      else{
+      }else{
         cprintf("pid %d %s: trap %d err %d on cpu %d "
 80107093:	e8 aa fc ff ff       	call   80106d42 <rcr2>
 80107098:	89 45 e4             	mov    %eax,-0x1c(%ebp)
 8010709b:	8b 45 08             	mov    0x8(%ebp),%eax
 8010709e:	8b 70 38             	mov    0x38(%eax),%esi
-                "eip 0x%x addr 0x%x--kill proc\n",
+                "eip 0x%x addr 0x%x--kill proc \n",
                 proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
 801070a1:	65 a1 00 00 00 00    	mov    %gs:0x0,%eax
 801070a7:	0f b6 00             	movzbl (%eax),%eax
       //if rcr2 is lower than the top of page and rcr2 is greater than the top more 32 bits 
       //and rcr2 is between designated size and  the process.
-      if (proc && rcr2() >= PGROUNDUP(rcr2())-32  && rcr2() <= proc->sz && rcr2()>= proc->sz- MAXPAGES*PGSIZE )
+			if (proc && rcr2() >= (PGROUNDUP(rcr2())-LIMITPS)  && rcr2() <= proc->sz && rcr2()>= proc->sz - (MAXPAGES-1)*PGSIZE ){
         allocuvm(proc->pgdir, PGROUNDDOWN(rcr2()), PGROUNDUP(rcr2()));
-      else{
+      }else{
         cprintf("pid %d %s: trap %d err %d on cpu %d "
 801070aa:	0f b6 d8             	movzbl %al,%ebx
 801070ad:	8b 45 08             	mov    0x8(%ebp),%eax
 801070b0:	8b 48 34             	mov    0x34(%eax),%ecx
 801070b3:	8b 45 08             	mov    0x8(%ebp),%eax
 801070b6:	8b 50 30             	mov    0x30(%eax),%edx
-                "eip 0x%x addr 0x%x--kill proc\n",
+                "eip 0x%x addr 0x%x--kill proc \n",
                 proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
 801070b9:	65 a1 04 00 00 00    	mov    %gs:0x4,%eax
 801070bf:	8d 78 6c             	lea    0x6c(%eax),%edi
 801070c2:	65 a1 04 00 00 00    	mov    %gs:0x4,%eax
       //if rcr2 is lower than the top of page and rcr2 is greater than the top more 32 bits 
       //and rcr2 is between designated size and  the process.
-      if (proc && rcr2() >= PGROUNDUP(rcr2())-32  && rcr2() <= proc->sz && rcr2()>= proc->sz- MAXPAGES*PGSIZE )
+			if (proc && rcr2() >= (PGROUNDUP(rcr2())-LIMITPS)  && rcr2() <= proc->sz && rcr2()>= proc->sz - (MAXPAGES-1)*PGSIZE ){
         allocuvm(proc->pgdir, PGROUNDDOWN(rcr2()), PGROUNDUP(rcr2()));
-      else{
+      }else{
         cprintf("pid %d %s: trap %d err %d on cpu %d "
 801070c8:	8b 40 10             	mov    0x10(%eax),%eax
 801070cb:	ff 75 e4             	pushl  -0x1c(%ebp)
@@ -14342,7 +14341,7 @@ trap(struct trapframe *tf)
 801070d4:	68 54 91 10 80       	push   $0x80109154
 801070d9:	e8 e1 92 ff ff       	call   801003bf <cprintf>
 801070de:	83 c4 20             	add    $0x20,%esp
-                "eip 0x%x addr 0x%x--kill proc\n",
+                "eip 0x%x addr 0x%x--kill proc \n",
                 proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
                 rcr2());
         proc->killed = 1;
@@ -14436,7 +14435,7 @@ trap(struct trapframe *tf)
 8010718c:	52                   	push   %edx
 8010718d:	57                   	push   %edi
 8010718e:	50                   	push   %eax
-8010718f:	68 54 91 10 80       	push   $0x80109154
+8010718f:	68 d0 91 10 80       	push   $0x801091d0
 80107194:	e8 26 92 ff ff       	call   801003bf <cprintf>
 80107199:	83 c4 20             	add    $0x20,%esp
             "eip 0x%x addr 0x%x--kill proc\n",
@@ -14663,7 +14662,7 @@ uartinit(void)
   
   // Announce that we're here.
   for(p="xv6...\n"; *p; p++)
-80107355:	c7 45 f4 98 92 10 80 	movl   $0x80109298,-0xc(%ebp)
+80107355:	c7 45 f4 dc 92 10 80 	movl   $0x801092dc,-0xc(%ebp)
 8010735c:	eb 19                	jmp    80107377 <uartinit+0xe7>
     uartputc(*p);
 8010735e:	8b 45 f4             	mov    -0xc(%ebp),%eax
@@ -17938,7 +17937,7 @@ setupkvm(void)
 80108503:	76 0d                	jbe    80108512 <setupkvm+0x58>
     panic("PHYSTOP too high");
 80108505:	83 ec 0c             	sub    $0xc,%esp
-80108508:	68 a0 92 10 80       	push   $0x801092a0
+80108508:	68 e4 92 10 80       	push   $0x801092e4
 8010850d:	e8 4a 80 ff ff       	call   8010055c <panic>
   for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
 80108512:	c7 45 f4 c0 c4 10 80 	movl   $0x8010c4c0,-0xc(%ebp)
@@ -18112,7 +18111,7 @@ switchuvm(struct proc *p)
 801086d8:	75 0d                	jne    801086e7 <switchuvm+0x148>
     panic("switchuvm: no pgdir");
 801086da:	83 ec 0c             	sub    $0xc,%esp
-801086dd:	68 b1 92 10 80       	push   $0x801092b1
+801086dd:	68 f5 92 10 80       	push   $0x801092f5
 801086e2:	e8 75 7e ff ff       	call   8010055c <panic>
   lcr3(v2p(p->pgdir));  // switch to new address space
 801086e7:	8b 45 08             	mov    0x8(%ebp),%eax
@@ -18151,7 +18150,7 @@ inituvm(pde_t *pgdir, char *init, uint sz)
 8010871e:	76 0d                	jbe    8010872d <inituvm+0x1c>
     panic("inituvm: more than a page");
 80108720:	83 ec 0c             	sub    $0xc,%esp
-80108723:	68 c5 92 10 80       	push   $0x801092c5
+80108723:	68 09 93 10 80       	push   $0x80109309
 80108728:	e8 2f 7e ff ff       	call   8010055c <panic>
   mem = kalloc();
 8010872d:	e8 4f a4 ff ff       	call   80102b81 <kalloc>
@@ -18208,7 +18207,7 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 80108797:	74 0d                	je     801087a6 <loaduvm+0x20>
     panic("loaduvm: addr must be page aligned");
 80108799:	83 ec 0c             	sub    $0xc,%esp
-8010879c:	68 e0 92 10 80       	push   $0x801092e0
+8010879c:	68 24 93 10 80       	push   $0x80109324
 801087a1:	e8 b6 7d ff ff       	call   8010055c <panic>
   for(i = 0; i < sz; i += PGSIZE){
 801087a6:	c7 45 f4 00 00 00 00 	movl   $0x0,-0xc(%ebp)
@@ -18228,7 +18227,7 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 801087d2:	75 0d                	jne    801087e1 <loaduvm+0x5b>
       panic("loaduvm: address should exist");
 801087d4:	83 ec 0c             	sub    $0xc,%esp
-801087d7:	68 03 93 10 80       	push   $0x80109303
+801087d7:	68 47 93 10 80       	push   $0x80109347
 801087dc:	e8 7b 7d ff ff       	call   8010055c <panic>
     pa = PTE_ADDR(*pte);
 801087e1:	8b 45 ec             	mov    -0x14(%ebp),%eax
@@ -18332,7 +18331,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 801088a2:	75 2b                	jne    801088cf <allocuvm+0x72>
       cprintf("allocuvm out of memory\n");
 801088a4:	83 ec 0c             	sub    $0xc,%esp
-801088a7:	68 21 93 10 80       	push   $0x80109321
+801088a7:	68 65 93 10 80       	push   $0x80109365
 801088ac:	e8 0e 7b ff ff       	call   801003bf <cprintf>
 801088b1:	83 c4 10             	add    $0x10,%esp
       deallocuvm(pgdir, newsz, oldsz);
@@ -18448,7 +18447,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 80108994:	75 0d                	jne    801089a3 <deallocuvm+0x7d>
         panic("kfree");
 80108996:	83 ec 0c             	sub    $0xc,%esp
-80108999:	68 39 93 10 80       	push   $0x80109339
+80108999:	68 7d 93 10 80       	push   $0x8010937d
 8010899e:	e8 b9 7b ff ff       	call   8010055c <panic>
       char *v = p2v(pa);
 801089a3:	83 ec 0c             	sub    $0xc,%esp
@@ -18502,7 +18501,7 @@ freevm(pde_t *pgdir)
 801089ed:	75 0d                	jne    801089fc <freevm+0x19>
     panic("freevm: no pgdir");
 801089ef:	83 ec 0c             	sub    $0xc,%esp
-801089f2:	68 3f 93 10 80       	push   $0x8010933f
+801089f2:	68 83 93 10 80       	push   $0x80109383
 801089f7:	e8 60 7b ff ff       	call   8010055c <panic>
   deallocuvm(pgdir, KERNBASE, 0);
 801089fc:	83 ec 04             	sub    $0x4,%esp
@@ -18588,7 +18587,7 @@ clearpteu(pde_t *pgdir, char *uva)
 80108aa2:	75 0d                	jne    80108ab1 <clearpteu+0x2f>
     panic("clearpteu");
 80108aa4:	83 ec 0c             	sub    $0xc,%esp
-80108aa7:	68 50 93 10 80       	push   $0x80109350
+80108aa7:	68 94 93 10 80       	push   $0x80109394
 80108aac:	e8 ab 7a ff ff       	call   8010055c <panic>
   *pte &= ~PTE_U;
 80108ab1:	8b 45 f4             	mov    -0xc(%ebp),%eax
@@ -18641,7 +18640,7 @@ copyuvm(pde_t *pgdir, uint sz)
 80108b08:	75 0d                	jne    80108b17 <copyuvm+0x55>
       panic("copyuvm: pte should exist");
 80108b0a:	83 ec 0c             	sub    $0xc,%esp
-80108b0d:	68 5a 93 10 80       	push   $0x8010935a
+80108b0d:	68 9e 93 10 80       	push   $0x8010939e
 80108b12:	e8 45 7a ff ff       	call   8010055c <panic>
     pa = PTE_ADDR(*pte);
 80108b17:	8b 45 ec             	mov    -0x14(%ebp),%eax

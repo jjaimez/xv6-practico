@@ -26,9 +26,10 @@ main(int argc, char *argv[])
   } else {
   wait();
   recursive(250);
-  printf(1,"finish 1 \n");
+  printf(1,"finish 2 \n");
   printf(1,"the next execution maybe not work (trap 14) \n");
-  recursive(300);
+  recursive(500);
+  printf(1,"finish 3 \n");
   exit();
   }
 }
