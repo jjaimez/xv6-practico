@@ -54,7 +54,6 @@ exec(char *path, char **argv)
   ip = 0;
   //allocate one page and leave a space to grow the stack and detect stack overflow
   sz = PGROUNDUP(sz);   
-      cprintf("BASE addr 0x%x LIMIT adsr 0x%x \n", sz + MAXPAGES*PGSIZE,sz + (MAXPAGES +1)*PGSIZE);
   if((sz = allocuvm(pgdir, sz + MAXPAGES*PGSIZE, sz + (MAXPAGES +1)*PGSIZE)) == 0)
     goto bad;
   //clearpteu(pgdir, (char*)(sz - 2*PGSIZE));

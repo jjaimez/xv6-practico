@@ -81,14 +81,13 @@ trap(struct trapframe *tf)
     case T_PGFLT:
       //if rcr2 is lower than the top of page and rcr2 is greater than the top more 32 bits 
       //and rcr2 is between designated size and  the process.
-      cprintf("pid addr 0x%x \n", rcr2());
 			if (proc && rcr2() >= (PGROUNDUP(rcr2())-LIMITPS)  && rcr2() <= proc->sz && rcr2()>= proc->sz - (MAXPAGES-1)*PGSIZE ){
         allocuvm(proc->pgdir, PGROUNDDOWN(rcr2()), PGROUNDUP(rcr2()));
       }else{
         cprintf("pid %d %s: trap %d err %d on cpu %d "
-                "eip 0x%x addr 0x%x--kill proc,0x%x \n",
+                "eip 0x%x addr 0x%x--kill proc \n",
                 proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
-                rcr2(),PGROUNDUP(rcr2())-4);
+                rcr2());
         proc->killed = 1;
       }
       break;
