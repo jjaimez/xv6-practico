@@ -178,6 +178,7 @@ UPROGS=\
 	_cmillion2\
 	_semaphoreexample\
 	_prodcon\
+	_recursive\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

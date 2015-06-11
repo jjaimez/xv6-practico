@@ -52,11 +52,9 @@ exec(char *path, char **argv)
   iunlockput(ip);
   end_op();
   ip = 0;
-
-  // Allocate two pages at the next page boundary.
-  // Make the first inaccessible.  Use the second as the user stack.
+  //allocate one page and leave a space to grow the stack and detect stack overflow
   sz = PGROUNDUP(sz);   
-  if((sz = allocuvm(pgdir, sz + ALLOCATEDPAGES*PGSIZE, sz + (ALLOCATEDPAGES +1)*PGSIZE)) == 0)
+  if((sz = allocuvm(pgdir, sz + MAXPAGES*PGSIZE, sz + (MAXPAGES +1)*PGSIZE)) == 0)
     goto bad;
   //clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   sp = sz;

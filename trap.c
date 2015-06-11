@@ -78,6 +78,19 @@ trap(struct trapframe *tf)
             cpu->id, tf->cs, tf->eip);
     lapiceoi();
     break;
+    case T_PGFLT:
+      //if rcr2 is lower than the top of page and rcr2 is greater than the top more 32 bits 
+      //and rcr2 is between designated size and  the process.
+      if (proc && rcr2() >= PGROUNDUP(rcr2())-32  && rcr2() <= proc->sz && rcr2()>= proc->sz- MAXPAGES*PGSIZE )
+        allocuvm(proc->pgdir, PGROUNDDOWN(rcr2()), PGROUNDUP(rcr2()));
+      else{
+        cprintf("pid %d %s: trap %d err %d on cpu %d "
+                "eip 0x%x addr 0x%x--kill proc\n",
+                proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
+                rcr2());
+        proc->killed = 1;
+      }
+      break;
 
   //PAGEBREAK: 13
   default:
@@ -87,19 +100,13 @@ trap(struct trapframe *tf)
               tf->trapno, cpu->id, tf->eip, rcr2());
       panic("trap");
     }
-    if (tf->trapno == T_PGFLT && proc && rcr2() >= PGROUNDUP(rcr2())-8   &&
-     rcr2() <= proc->sz && rcr2()>= proc->sz- ALLOCATEDPAGES*PGSIZE){
-        cprintf("estoy por alocar \n");
-      allocuvm(proc->pgdir, PGROUNDDOWN(rcr2()), PGROUNDUP(rcr2()));
-        cprintf("alloco %d \n" , ++i);
-      }else{
-      // In user space, assume process misbehaved.
-      cprintf("pid %d %s: trap %d err %d on cpu %d "
-              "eip 0x%x addr 0x%x--kill proc\n",
-              proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
-              rcr2());
-      proc->killed = 1;
-  }
+    // In user space, assume process misbehaved.
+    cprintf("pid %d %s: trap %d err %d on cpu %d "
+            "eip 0x%x addr 0x%x--kill proc\n",
+            proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
+             rcr2());
+    proc->killed = 1;
+  
   }
 
   // Force process exit if it has been killed and is in user space.
