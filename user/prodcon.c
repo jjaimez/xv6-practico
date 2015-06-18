@@ -15,10 +15,9 @@ void consumer (int sFactory, int sConsumer, int pid, char path[]){
     semdown(sFactory);
     fd = open(path, O_RDWR);  
     read(fd, &k, sizeof(k));
-    close(fd); 
     k--;
     printf(1," k=%d consumer= %d \n",k,pid); 
-    fd = open(path, O_RDWR);
+    fseek(fd,0);
     write(fd, &k, sizeof(k));
     close(fd);
     i = 0;
@@ -41,11 +40,10 @@ void producer (int sFactory, int sConsumer, int pid, char path[]){
     }
     semdown(sFactory);
     fd = open(path, O_RDWR);
-    read(fd, &k, sizeof(k)); 
-    close(fd);
+    read(fd, &k, sizeof(k));
     k++;
     printf(1," k=%d producer= %d \n",k,pid); 
-    fd = open(path, O_RDWR);
+    fseek(fd,0);
     write(fd, &k, sizeof(k));
     close(fd);
     semup(sFactory);

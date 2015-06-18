@@ -440,3 +440,15 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+
+int
+sys_fseek(void)
+{
+  struct file *f;
+  int pos;
+
+  if(argfd(0, 0, &f) < 0 || argint(1, &pos) < 0 || pos > sizeof(f))
+    return -1;
+  return fileseek(f, pos);
+}
