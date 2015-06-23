@@ -23,6 +23,9 @@ void            cprintf(char*, ...);
 void            consoleintr(int(*)(void));
 void            panic(char*) __attribute__((noreturn));
 
+// rtc.c
+void            rtcinit(void);
+
 // exec.c
 int             exec(char*, char**);
 
