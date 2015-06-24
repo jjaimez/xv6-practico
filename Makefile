@@ -180,6 +180,7 @@ UPROGS=\
 	_semaphoreexample\
 	_prodcon\
 	_recursive\
+	_rtcexample\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
