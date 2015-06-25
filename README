@@ -1,12 +1,12 @@
 ---------------------------------------------------------------
 -----------------Materia: Sistemas Operativos------------------
 ----Grupo: Jacinto Jaimez, Nicolas Pereyra, Adrián Galfioni----
-------------------Fecha de entrega: 11/06/15-------------------
--------------------------Proyecto 4----------------------------
+------------------Fecha de entrega: 24/06/15-------------------
+-------------------------Proyecto 5----------------------------
 ---------------------------------------------------------------
 
 Instrucciones de uso:
 
 1: Ingresar a la carpeta xv6-unrc
 2: Ejecutar el comando 'make qemu'
-3: Dentro de qemu, ejecutar comando 'recursive' ejemplo de stack creciendo bajo demanda
+3: Dentro de qemu, ejecutar comando 'date 12 12 12 12' para setear la hora del rtc y 'date' para ver la hora del rtc.

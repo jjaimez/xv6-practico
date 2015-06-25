@@ -15,7 +15,6 @@ OBJS = \
 	picirq.o\
 	pipe.o\
 	proc.o\
-	rtc.o\
 	semaphore.o\
 	spinlock.o\
 	string.o\
@@ -30,6 +29,7 @@ OBJS = \
 	uart.o\
 	vectors.o\
 	vm.o\
+	rtc.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf
@@ -180,7 +180,7 @@ UPROGS=\
 	_semaphoreexample\
 	_prodcon\
 	_recursive\
-	_rtcexample\
+	_date\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

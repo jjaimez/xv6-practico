@@ -16,12 +16,12 @@ main(void)
     mknod("console", 1, 1);
     open("console", O_RDWR);
   }
-  if(open("rtc", O_RDWR) < 0){
-    mknod("rtc", 5, 0);
-    open("rtc", O_RDWR);
-  }
   dup(0);  // stdout
   dup(0);  // stderr
+  if(open("rtc", O_RDWR) < 0){
+    mknod("rtc", 9, 0);
+    open("rtc", O_RDWR);
+  }
 
   for(;;){
     printf(1, "init: starting sh\n");
