@@ -68,7 +68,7 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 // physical addresses starting at pa. va and size might not
 // be page-aligned.
 static int
-mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
+mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm, int pte_p)
 {
   char *a, *last;
   pte_t *pte;
@@ -78,7 +78,10 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
   for(;;){
     if((pte = walkpgdir(pgdir, a, 1)) == 0)
       return -1;
-    *pte = pa | perm | PTE_P;
+    if(pte_p)
+      *pte = pa | perm | PTE_P;
+    else
+      *pte = pa | perm;
     if(a == last)
       break;
     a += PGSIZE;
@@ -136,7 +139,7 @@ setupkvm(void)
     panic("PHYSTOP too high");
   for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
     if(mappages(pgdir, k->virt, k->phys_end - k->phys_start, 
-                (uint)k->phys_start, k->perm) < 0)
+                (uint)k->phys_start, k->perm,PTE_PON) < 0)
       return 0;
   return pgdir;
 }
@@ -185,7 +188,7 @@ inituvm(pde_t *pgdir, char *init, uint sz)
     panic("inituvm: more than a page");
   mem = kalloc();
   memset(mem, 0, PGSIZE);
-  mappages(pgdir, 0, PGSIZE, v2p(mem), PTE_W|PTE_U);
+  mappages(pgdir, 0, PGSIZE, v2p(mem), PTE_W|PTE_U,PTE_PON);
   memmove(mem, init, sz);
 }
 
@@ -235,7 +238,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       return 0;
     }
     memset(mem, 0, PGSIZE);
-    mappages(pgdir, (char*)a, PGSIZE, v2p(mem), PTE_W|PTE_U);
+    mappages(pgdir, (char*)a, PGSIZE, v2p(mem), PTE_W|PTE_U,PTE_PON);
   }
   return newsz;
 }
@@ -270,6 +273,26 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   return newsz;
 }
 
+static int unmappages(pde_t *pgdir, void *va, uint size, int freeframes){
+  pte_t *pte;
+  uint a, pa;
+  a = PGROUNDUP((uint)va);
+  for(; a < (uint)va+size; a += PGSIZE){
+    pte = walkpgdir(pgdir, (char*)a, 0);
+    if(!pte) a += (NPTENTRIES - 1) * PGSIZE;
+    else if((*pte & PTE_P) != 0 && freeframes){
+      pa = PTE_ADDR(*pte);
+      if(pa == 
+        panic("kfree");
+      char *v = p2v(pa);
+      kfree (v);
+      *pte = 0;
+    } 
+  }
+  return a;
+}
+
+
 // Free a page table and all the physical memory pages
 // in the user part.
 void
@@ -277,8 +300,7 @@ freevm(pde_t *pgdir)
 {
   uint i;
 
-  if(pgdir == 0)
-    panic("freevm: no pgdir");
+  if(pgdir == 0    panic("freevm: no pgdir");
   deallocuvm(pgdir, KERNBASE, 0);
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){
@@ -322,7 +344,7 @@ copyuvm(pde_t *pgdir, uint sz)
     if((mem = kalloc()) == 0)
       goto bad;
     memmove(mem, (char*)p2v(pa), PGSIZE);
-    if(mappages(d, (void*)i, PGSIZE, v2p(mem), flags) < 0)
+    if(mappages(d, (void*)i, PGSIZE, v2p(mem), flags,PTE_PON) < 0)
       goto bad;
   }
   return d;
