@@ -30,6 +30,9 @@ int semfree(int);
 int semdown(int);
 int semup(int);
 int fseek(int fd, int pos);
+int shm_create(int);
+int shm_close(int);
+int shm_get(int, void **);
 
 // ulib.c
 int stat(char*, struct stat*);

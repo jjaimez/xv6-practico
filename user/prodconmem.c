@@ -5,7 +5,7 @@
 
 #define N  2
 
-
+/*
 void consumer (int sFactory, int sConsumer, int pid, char path[]){
   int i,k,fd;
 
@@ -51,49 +51,18 @@ void producer (int sFactory, int sConsumer, int pid, char path[]){
     j++;
   }         
 }
-
+*/
 
 
 int
 main(int argc, char *argv[])
 {
-int sConsumer,sFactory,pid,n,k,fd; 
+
   
- char path[] = "factory";
-  
-  sFactory= semget(-1,1);
-  sConsumer= semget(-1,0);
-  k=0;
-  fd = open(path, O_CREATE|O_RDWR);
-  write(fd, &k, sizeof(k));
-  close(fd);
-
-for(n=0; n<N; n++){
-    pid = fork(); 
-    if(pid == 0){
-      consumer(sFactory,sConsumer,getpid(),path);
-      semfree(sFactory);
-      semfree(sConsumer);
-      exit();
-    }       
-  }  
+ int k = shm_create(1);
+  void ** mem = 0 ;
+  shm_get(k,*mem);
 
 
-  for(n=0; n<N; n++){
-    pid = fork(); 
-    if(pid == 0){
-      producer(sFactory,sConsumer,getpid(),path);
-      semfree(sFactory);
-      semfree(sConsumer);
-      exit();
-    }       
-  }
- 
-
-  for(n=0; n<N*2; n++){
-    wait();
-  }
-  semfree(sFactory);
-  semfree(sConsumer);
   exit();
 }    

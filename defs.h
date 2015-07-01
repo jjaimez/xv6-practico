@@ -184,6 +184,8 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
+int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm, int pte_p);
+int unmappages(pde_t *pgdir, void *va, uint size, int freeframes);
 
 //semaphore.c
 int            semdown(int sem_id);
@@ -191,6 +193,12 @@ int            semfree(int sem_id);
 int            semget(int sem_id, int init_value);
 int            semup(int sem_id);
 int            semvalue(int sem_id);
+
+
+//sharedmem.c
+int            shm_get(int key, void** addr);
+int            shm_close(int key);
+int            shm_create(int size);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

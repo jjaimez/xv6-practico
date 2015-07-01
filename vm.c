@@ -67,7 +67,7 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 // Create PTEs for virtual addresses starting at va that refer to
 // physical addresses starting at pa. va and size might not
 // be page-aligned.
-static int
+int
 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm, int pte_p)
 {
   char *a, *last;
@@ -273,7 +273,9 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   return newsz;
 }
 
-static int unmappages(pde_t *pgdir, void *va, uint size, int freeframes){
+//unmap the range [va, va + size] logical address of a process.
+// if freeframes free the momory.
+int unmappages(pde_t *pgdir, void *va, uint size, int freeframes){
   pte_t *pte;
   uint a, pa;
   a = PGROUNDUP((uint)va);
@@ -282,14 +284,14 @@ static int unmappages(pde_t *pgdir, void *va, uint size, int freeframes){
     if(!pte) a += (NPTENTRIES - 1) * PGSIZE;
     else if((*pte & PTE_P) != 0 && freeframes){
       pa = PTE_ADDR(*pte);
-      if(pa == 
+      if(pa == 0)
         panic("kfree");
       char *v = p2v(pa);
       kfree (v);
       *pte = 0;
     } 
   }
-  return a;
+  return 0;
 }
 
 
@@ -300,7 +302,8 @@ freevm(pde_t *pgdir)
 {
   uint i;
 
-  if(pgdir == 0    panic("freevm: no pgdir");
+  if(pgdir == 0)
+     panic("freevm: no pgdir");
   deallocuvm(pgdir, KERNBASE, 0);
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){

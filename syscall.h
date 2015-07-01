@@ -27,3 +27,6 @@
 #define SYS_semdown    26
 #define SYS_semup      27
 #define SYS_fseek      28
+#define SYS_shm_create 29
+#define SYS_shm_close  30
+#define SYS_shm_get    31

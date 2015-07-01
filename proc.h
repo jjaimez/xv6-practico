@@ -71,7 +71,7 @@ struct proc {
 	struct proc *next;					 //next mlf
   int sem[MAXSEMPROC];         //semaphores used for this process 
   int squantity;               //quantity of semaphores
-  int shmem[MAXSHMPROC];       //spaces of shares memory used for this process 
+  //int shmem[MAXSHMPROC];       //spaces of shares memory used for this process 
   int shmemquantity;           //quantity of spaces in shared memory
 };
 

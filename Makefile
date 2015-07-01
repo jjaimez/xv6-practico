@@ -31,6 +31,7 @@ OBJS = \
 	vm.o\
 	rtc.o\
 	sharedmem.o\
+	syssharedmem.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf
@@ -182,6 +183,7 @@ UPROGS=\
 	_prodcon\
 	_recursive\
 	_date\
+	_prodconmem\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
