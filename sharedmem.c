@@ -17,7 +17,7 @@ shm_create(int size){
   int i = 0;
   while (i<MAXSEM){
     if (shmtable.sharedmemory[i].refcount == 0){
-      shmtable.sharedmemory[i].addr = kalloc();
+      *shmtable.sharedmemory[i].addr = kalloc();
       shmtable.sharedmemory[i].refcount = 1;
       shmtable.quantity++;
       return i;
@@ -38,6 +38,11 @@ shm_close(int key){
 	if (shmtable.sharedmemory[key].refcount == 0 || key < 0 || key > MAXSHM)
     return -1;
   shmtable.sharedmemory[key].refcount--;
+  int i;
+  for (i=0; i<proc->shmemquantity-1;i++){
+    proc->shmem[i] = proc->shmem[i+1];
+  }
+  proc->shmemquantity--;
   if (shmtable.sharedmemory[key].refcount == 0)
     shmtable.quantity--;
   return 0;  
@@ -52,11 +57,14 @@ la dirección del bloque de memoria (dirección lógica del
 proceso).
 Retorno: -1 en caso de error ( key inválida).*/
 int
-shm_get(int key, void ** addr){
+shm_get(int key, char** addr){
   if (shmtable.sharedmemory[key].refcount == 0 || key < 0 || key > MAXSHM || shmtable.sharedmemory[key].refcount==MAXSHMPROC )
     return -1;
-  *(char *) addr = *shmtable.sharedmemory[key].addr;
+  addr = shmtable.sharedmemory[key].addr;
   shmtable.sharedmemory[key].refcount++;
   shmtable.quantity++;
+  proc->shmem[proc->shmemquantity]=key;
+  proc->shmemquantity++;
+
   return 0;  
 }

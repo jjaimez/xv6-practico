@@ -196,7 +196,7 @@ int            semvalue(int sem_id);
 
 
 //sharedmem.c
-int            shm_get(int key, void** addr);
+int            shm_get(int key, char** addr);
 int            shm_close(int key);
 int            shm_create(int size);
 

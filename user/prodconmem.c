@@ -57,12 +57,33 @@ void producer (int sFactory, int sConsumer, int pid, char path[]){
 int
 main(int argc, char *argv[])
 {
+  int n,pid;
+  int k = shm_create(1);
+  char* mem= 0 ;
+  shm_get(k,&mem);
+  *mem= 17;
+  char* mem2=0;
+  shm_get(k,&mem2);
+  printf(1,"geeet %d \n",*mem2);
+  for(n=0; n<1; n++){
+    pid = fork(); 
+    if(pid == 0){
+      char* memFork=0;
 
+      shm_get(k,&memFork);
+      printf(1,"geeet %d  \n",*memFork);
+      *memFork=3;
+      shm_close(k);
+        printf(1,"close ");
+      exit();
+    }
+    else{
+        for(n=0; n<1; n++){
+          wait();
+        }
+    }       
+  }
   
- int k = shm_create(1);
-  void ** mem = 0 ;
-  shm_get(k,*mem);
-
-
+  shm_close(k);
   exit();
 }    

@@ -249,6 +249,13 @@ exit(void)
   }
   proc->squantity = 0;
 
+
+  //release all the sharedmem.
+  for(i = 0; i < proc->shmemquantity; i++){   
+    shm_close(proc->shmem[i]);
+  }
+  proc->shmemquantity = 0;
+
   acquire(&ptable.lock);
 
   // Parent might be sleeping in wait().
@@ -323,6 +330,7 @@ wait(void)
 void
 scheduler(void)
 {
+      //panic("panicss \n ");
 
   for(;;){
     // Enable interrupts on this processor.

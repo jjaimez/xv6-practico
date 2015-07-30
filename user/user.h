@@ -32,7 +32,7 @@ int semup(int);
 int fseek(int fd, int pos);
 int shm_create(int);
 int shm_close(int);
-int shm_get(int, void **);
+int shm_get(int, char**);
 
 // ulib.c
 int stat(char*, struct stat*);

@@ -264,7 +264,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     else if((*pte & PTE_P) != 0){
       pa = PTE_ADDR(*pte);
       if(pa == 0)
-        panic("kfree");
+        panic("kfree deall");
       char *v = p2v(pa);
       kfree(v);
       *pte = 0;
@@ -285,7 +285,7 @@ int unmappages(pde_t *pgdir, void *va, uint size, int freeframes){
     else if((*pte & PTE_P) != 0 && freeframes){
       pa = PTE_ADDR(*pte);
       if(pa == 0)
-        panic("kfree");
+        panic("kfree unmappages");
       char *v = p2v(pa);
       kfree (v);
       *pte = 0;
