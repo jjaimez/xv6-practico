@@ -62,19 +62,15 @@ main(int argc, char *argv[])
   char* mem= 0 ;
   shm_get(k,&mem);
   *mem= 17;
-  char* mem2=0;
-  shm_get(k,&mem2);
-  printf(1,"geeet %d \n",*mem2);
   for(n=0; n<1; n++){
     pid = fork(); 
     if(pid == 0){
       char* memFork=0;
-
       shm_get(k,&memFork);
-      printf(1,"geeet %d  \n",*memFork);
+      printf(1,"leo desde el hijo %d  \n",*memFork);
       *memFork=3;
-      shm_close(k);
-        printf(1,"close ");
+      printf(1,"modifico desde el hijo %d  \n",*memFork);
+      //shm_close(k);
       exit();
     }
     else{
@@ -83,7 +79,7 @@ main(int argc, char *argv[])
         }
     }       
   }
-  
+  printf(1,"leo desde el padre %d  \n",*mem);
   shm_close(k);
   exit();
 }    

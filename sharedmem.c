@@ -18,6 +18,7 @@ shm_create(int size){
   while (i<MAXSEM){
     if (shmtable.sharedmemory[i].refcount == 0){
       *shmtable.sharedmemory[i].addr = kalloc();
+      memset(*shmtable.sharedmemory[i].addr, 0, PGSIZE);
       shmtable.sharedmemory[i].refcount = 1;
       shmtable.quantity++;
       return i;

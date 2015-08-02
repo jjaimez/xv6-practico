@@ -282,7 +282,7 @@ int unmappages(pde_t *pgdir, void *va, uint size, int freeframes){
   for(; a < (uint)va+size; a += PGSIZE){
     pte = walkpgdir(pgdir, (char*)a, 0);
     if(!pte) a += (NPTENTRIES - 1) * PGSIZE;
-    else if((*pte & PTE_P) != 0 && freeframes){
+    else if((*pte != 0) && freeframes){
       pa = PTE_ADDR(*pte);
       if(pa == 0)
         panic("kfree unmappages");

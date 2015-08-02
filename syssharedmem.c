@@ -18,7 +18,6 @@ sys_shm_create(void){
 	if (proc->shmemquantity >= MAXSHMPROC)
 		return -1;
   int k = shm_create(size);
-  //mappages(proc->pgdir, (char*)PGROUNDUP(proc->sz), PGSIZE, v2p(shmtable.sharedmemory[k].addr), PTE_W|PTE_U,PTE_PON);
   return k;
 }
 
@@ -28,10 +27,9 @@ sys_shm_get(void){//int key, void ** addr
   char* mem = 0;
   if(argint(0, &k) < 0)
     return -1;
-  argstr(1,(char**)mem);
-   
+  argstr(1,&mem);     
   if (!shm_get(k,&mem)){
-    mappages(proc->pgdir, (char*)PGROUNDUP(proc->sz), PGSIZE, *mem, PTE_W|PTE_U,PTE_PON);
+    mappages(proc->pgdir, (char*)PGROUNDUP(proc->sz), PGSIZE, *mem, PTE_W|PTE_U,PTE_POFF); 
     return 0;
   }
   return -1;
@@ -43,7 +41,7 @@ sys_shm_close(void){
   if(argint(0, &k) < 0)
     return -1;
   if (!shm_close(k)){
-    unmappages(proc->pgdir, shmtable.sharedmemory[k].addr, PGSIZE, shmtable.sharedmemory[k].refcount == 0);
+    unmappages(proc->pgdir, *shmtable.sharedmemory[k].addr, PGSIZE, shmtable.sharedmemory[k].refcount == 0);
     return 0;
   }
   return -1;
