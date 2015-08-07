@@ -251,8 +251,9 @@ exit(void)
 
 
   //release all the sharedmem.
-  for(i = 0; i < proc->shmemquantity; i++){   
-    //shm_close(proc->shmem[i]);
+  for(i = 0; i < MAXSHMPROC; i++){
+    if (proc->shmem[i] != 0)   
+      shm_close(proc->shmem[i]);
   }
   proc->shmemquantity = 0;
 
