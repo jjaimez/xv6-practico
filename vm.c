@@ -282,7 +282,7 @@ int unmappages(pde_t *pgdir, void *va, uint size, int freeframes){
   for(; a < (uint)va+size; a += PGSIZE){
     pte = walkpgdir(pgdir, (char*)a, 0);
     if(!pte) a += (NPTENTRIES - 1) * PGSIZE;
-    else if((*pte != 0) && freeframes){
+    else if(((*pte & PTE_P) != 0) && freeframes){
       pa = PTE_ADDR(*pte);
       if(pa == 0)
         panic("kfree unmappages");
@@ -304,7 +304,7 @@ freevm(pde_t *pgdir)
 
   if(pgdir == 0)
      panic("freevm: no pgdir");
-  deallocuvm(pgdir, KERNBASE, 0);
+  deallocuvm(pgdir, proc->sz, 0);
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){
       char * v = p2v(PTE_ADDR(pgdir[i]));

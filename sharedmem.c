@@ -17,8 +17,8 @@ shm_create(int size){
   int i = 0;
   while (i<MAXSEM){
     if (shmtable.sharedmemory[i].refcount == 0){
-      *shmtable.sharedmemory[i].addr = kalloc();
-      memset(*shmtable.sharedmemory[i].addr, 0, PGSIZE);
+      shmtable.sharedmemory[i].addr = kalloc();
+      memset(shmtable.sharedmemory[i].addr, 0, PGSIZE);
       shmtable.sharedmemory[i].refcount = 1;
       shmtable.quantity++;
       return i;
@@ -61,7 +61,10 @@ int
 shm_get(int key, char** addr){
   if (shmtable.sharedmemory[key].refcount == 0 || key < 0 || key > MAXSHM || shmtable.sharedmemory[key].refcount==MAXSHMPROC )
     return -1;
-  addr = shmtable.sharedmemory[key].addr;
+ *addr = shmtable.sharedmemory[key].addr;
+  //cprintf("addr %x \n" ,addr);
+  cprintf("addr* %x\n",*addr);
+  //cprintf("addr& %x\n",&addr);
   shmtable.sharedmemory[key].refcount++;
   shmtable.quantity++;
   proc->shmem[proc->shmemquantity]=key;

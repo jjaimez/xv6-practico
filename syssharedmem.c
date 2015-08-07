@@ -29,7 +29,11 @@ sys_shm_get(void){//int key, void ** addr
     return -1;
   argstr(1,&mem);     
   if (!shm_get(k,&mem)){
-    mappages(proc->pgdir, (char*)PGROUNDUP(proc->sz), PGSIZE, *mem, PTE_W|PTE_U,PTE_POFF); 
+   // cprintf(" %x\n", *mem);
+   // cprintf("solo %x\n", mem);
+   // cprintf("& %x\n", &mem);
+    mappages(proc->pgdir, (char*)proc->sz, PGSIZE, v2p(mem), PTE_W|PTE_U,PTE_PON); 
+    mem = (char*)proc->sz+PGSIZE;
     return 0;
   }
   return -1;
@@ -41,7 +45,7 @@ sys_shm_close(void){
   if(argint(0, &k) < 0)
     return -1;
   if (!shm_close(k)){
-    unmappages(proc->pgdir, *shmtable.sharedmemory[k].addr, PGSIZE, shmtable.sharedmemory[k].refcount == 0);
+    unmappages(proc->pgdir, (char*)v2p(shmtable.sharedmemory[k].addr), PGSIZE, shmtable.sharedmemory[k].refcount == 0);
     return 0;
   }
   return -1;
