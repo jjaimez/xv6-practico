@@ -22,13 +22,14 @@ sys_shm_create(void){
 int
 sys_shm_get(void){//int key, void ** addr
   int k;
-  char* mem = 0;  
+  int mem = 0;  
   if (proc->shmemquantity >= MAXSHMPROC)
     return -1;
   if(argint(0, &k) < 0)
     return -1;
-  argstr(1,&mem);     
-  if (!shm_get(k,&mem)){
+  argint(1,&mem); 
+      cprintf(" %x\n", mem);
+  if (!shm_get(k,(char**)mem)){
    // cprintf(" %x\n", *mem);
    // cprintf("solo %x\n", mem);
    // cprintf("& %x\n", &mem);    

@@ -59,29 +59,36 @@ main(int argc, char *argv[])
 {
   int n,pid;
   int k = shm_create(1);
-  char* mem= 0;
+   char* mem= 0;
   shm_get(k,&mem);
+ 
+  
+
   *mem = 17;
+  
+ printf(1,"leo desde el padre la memoria %x \n",(uint)&mem);
+
+
   for(n=0; n<1; n++){
     pid = fork(); 
     if(pid == 0){
-      char* memFork=0;
+       char* memFork=0;
       shm_get(k,&memFork);
-      printf(1,"leo desde el hijo %d  \n",*memFork);
+    // printf(1,"leo desde el hijo %d  \n",*memFork);
       *memFork=3;
-      printf(1,"modifico desde el hijo %d  \n",*memFork);
+      //printf(1,"modifico desde el hijo %d  \n",*memFork);
       pid = fork(); 
       if(pid == 0){
         char* memFork2=0;
         shm_get(k,&memFork2);
-        printf(1,"leo desde el nieto %d  \n",*memFork2);
+        //printf(1,"leo desde el nieto %d  \n",*memFork2);
         *memFork2=6;
-        printf(1,"modifico desde el nieto %d  \n",*memFork2);
+        //printf(1,"modifico desde el nieto %d  \n",*memFork2);
         shm_close(k);
         exit();
       }else{
           wait();
-          printf(1,"leo desde el hijo lo del nieto %d  \n",*memFork);
+          //printf(1,"leo desde el hijo lo del nieto %d  \n",*memFork);
           shm_close(k);
       exit();
         

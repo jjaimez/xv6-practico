@@ -14,7 +14,7 @@
 #define QUANTUM      3   //quantum
 #define MAXSEM       20  // maximum quantity of semaphores in system
 #define MAXSEMPROC   5   //  maximum quantity of semaphores per process
-#define MAXPAGES    6   // maximum allocated pages
+#define MAXPAGES    1   // maximum allocated pages
 #define LIMITPS     16  // limit to access in new page stack
 #define PTE_PON     1  // bit p on
 #define PTE_POFF    0  // bit p off
