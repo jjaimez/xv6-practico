@@ -95,6 +95,7 @@ shm_get(int key, char** addr){
     proc->shmemquantity++;
     mappages(proc->pgdir, (char*)proc->sz+((i+1)*PGSIZE), PGSIZE, v2p(shmtable.sharedmemory[key].addr), PTE_W|PTE_U,PTE_PON); 
     *addr = (char*)proc->sz+((i+1)*PGSIZE);
+    cprintf("addr %x\n",*addr);
     release(&shmtable.lock);
     return 0;
   }   

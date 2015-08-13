@@ -103,6 +103,13 @@ int sConsumer,sFactory,pid,n,k;
   shm_get(k,&mem); //obtengo el espacio en el padre
   *mem = (int)0; // lo inicio con cero
 
+//creo otro espacio de memoria
+
+  int k2 = shm_create(1); //creo un espacio de memoria compartido
+  printf(1,"k1= %d k2= %d \n",k,k2); 
+  char* mem2= 0;
+  shm_get(k2,&mem2); //obtengo el espacio en el padre
+  *mem2 = (int)17; // lo inicio con cero
 
 for(n=0; n<N; n++){
     pid = fork(); 
@@ -115,6 +122,16 @@ for(n=0; n<N; n++){
       semfree(sConsumer);
       if (flag == 0)
         shm_close(k); 
+
+      //le seteo lo que tiene mas 5, así veo que no se rompa nada
+      char* memH2= 0;
+      int flag2 = shm_get(k2,&memH2);
+      if (flag2 == 0){
+        //*memH2= ((int)*memH2)+5;
+        printf(1," valor en la segunda celda =%d consumidor= %d \n",*memH2,getpid()); 
+        shm_close(k2); 
+      }
+
       exit();
     }       
   }  
@@ -130,7 +147,18 @@ for(n=0; n<N; n++){
       semfree(sFactory);
       semfree(sConsumer); 
       if (flag == 0)
-        shm_close(k);         
+        shm_close(k);    
+
+      //le seteo lo que tiene menos 5, así veo que no se rompa nada
+      char* memH2= 0;
+      int flag2 = shm_get(k2,&memH2);
+      if (flag2 == 0){
+       // *memH2= ((int)*memH2)-5;
+        printf(1," valor en la segunda celda =%d productor= %d \n",*memH2,getpid()); 
+        shm_close(k2); 
+      }
+
+
       exit();
     }       
   }
