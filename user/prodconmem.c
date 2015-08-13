@@ -3,23 +3,21 @@
 #include "user.h"
 #include "fcntl.h"
 
-#define N  1
+#define N  4
 
 
-void consumer (int sFactory, int sConsumer, int key, int pid){
+void consumer (int sFactory, int sConsumer, char* memConsumer, int pid){
 
   int i;
-  char* memConsumer= 0;
-  shm_get(key,&memConsumer);
   int j = 0;
-  while (j<20){    
+  while (j<5){    
     semdown(sConsumer);
     semdown(sFactory);
     *memConsumer= ((int)*memConsumer) -1;
     printf(1," valor en celda=%d consumidor= %d \n",*memConsumer,pid); 
 
     i = 0;
-    while (i<1000){ //para demorar un poco la escritura y hacerlo más lento
+    while (i<5000){ //para demorar un poco la escritura y hacerlo más lento
       i++;
     }
     semup(sFactory);
@@ -28,16 +26,12 @@ void consumer (int sFactory, int sConsumer, int key, int pid){
 }
 
 
-void producer (int sFactory, int sConsumer, int key, int pid){
+void producer (int sFactory, int sConsumer, char* mem, int pid){
   int i;
-  int j = 0;
-  char* mem=0;
-  shm_get(key,&mem);
-
-
-  while (j<20){
+  int j = 0; 
+  while (j<5){
     i = 0;
-    while (i<1){//hago tiempo
+    while (i<5000){//hago tiempo
       i++;
     }
     semdown(sFactory);
@@ -47,7 +41,6 @@ void producer (int sFactory, int sConsumer, int key, int pid){
     semup(sConsumer); 
     j++;
   }    
-  
 }
 
 
@@ -108,15 +101,20 @@ int sConsumer,sFactory,pid,n,k;
   k = shm_create(1); //creo un espacio de memoria compartido
   char* mem= 0;
   shm_get(k,&mem); //obtengo el espacio en el padre
-  *mem = (int)10; // lo inicio con cero
+  *mem = (int)0; // lo inicio con cero
+
 
 for(n=0; n<N; n++){
     pid = fork(); 
     if(pid == 0){
-      consumer(sFactory,sConsumer,k,getpid());
+      char* memH= 0;
+      int flag = shm_get(k,&memH);
+      if (flag == 0)
+        consumer(sFactory,sConsumer,memH,getpid());
       semfree(sFactory);
       semfree(sConsumer);
-      shm_close(k);
+      if (flag == 0)
+        shm_close(k); 
       exit();
     }       
   }  
@@ -125,10 +123,14 @@ for(n=0; n<N; n++){
   for(n=0; n<N; n++){
     pid = fork(); 
     if(pid == 0){
-      producer(sFactory,sConsumer,k,getpid());
+      char* memH= 0;
+      int flag = shm_get(k,&memH);
+      if (flag == 0)
+        producer(sFactory,sConsumer,memH,getpid());
       semfree(sFactory);
-      semfree(sConsumer);
-      shm_close(k);
+      semfree(sConsumer); 
+      if (flag == 0)
+        shm_close(k);         
       exit();
     }       
   }

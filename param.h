@@ -18,5 +18,5 @@
 #define LIMITPS     16  // limit to access in new page stack
 #define PTE_PON     1  // bit p on
 #define PTE_POFF    0  // bit p off
-#define MAXSHM      10  // maximum quantity of spaces of shared memory in system
-#define MAXSHMPROC  5  // maximum quantity of spaces of shared memory per process
+#define MAXSHM      20  // maximum quantity of spaces of shared memory in system
+#define MAXSHMPROC  20  // maximum quantity of spaces of shared memory per process
