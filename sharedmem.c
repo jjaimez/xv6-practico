@@ -21,7 +21,6 @@ shm_create(int size){
   while (i<MAXSHM){
     if (shmtable.sharedmemory[i].refcount == 0){
       shmtable.sharedmemory[i].addr = kalloc();
-       cprintf("create addr* %x\n",shmtable.sharedmemory[i].addr);
       memset(shmtable.sharedmemory[i].addr, 0, PGSIZE);
       shmtable.sharedmemory[i].refcount = 1;
       shmtable.quantity++;
@@ -96,7 +95,6 @@ shm_get(int key, char** addr){
     proc->shmemquantity++;
     mappages(proc->pgdir, (char*)proc->sz+((i+1)*PGSIZE), PGSIZE, v2p(shmtable.sharedmemory[key].addr), PTE_W|PTE_U,PTE_PON); 
     *addr = (char*)proc->sz+((i+1)*PGSIZE);
-    cprintf("%d get memoria %x  sz: %x \n",proc->pid, *addr, proc->sz);
     release(&shmtable.lock);
     return 0;
   }   

@@ -208,7 +208,6 @@ fork(void)
 
   pid = np->pid;
 
-  cprintf("pid: %d, sz: %x \n", pid, proc->sz);
 
   // lock to force the compiler to emit the np->state write last.
   acquire(&ptable.lock);
