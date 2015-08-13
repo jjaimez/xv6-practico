@@ -29,7 +29,7 @@ sys_shm_get(void){//int key, void ** addr
     return -1;
   argint(1,&mem); 
   if (!shm_get(k,(char**)mem)){
-   // cprintf(" %x\n", *mem);
+    //cprintf(" %x\n", mem);
    // cprintf("solo %x\n", mem);
    // cprintf("& %x\n", &mem);    
     return 0;

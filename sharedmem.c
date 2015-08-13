@@ -55,7 +55,7 @@ shm_close(int key){
     return -1;
   }
   shmtable.sharedmemory[key].refcount--;
-  proc->shmem[i] = 0;
+  proc->shmem[i] = -1;
   proc->shmemquantity--;
   if (shmtable.sharedmemory[key].refcount == 0)
     shmtable.quantity--;    
@@ -84,9 +84,10 @@ shm_get(int key, char** addr){
   //cprintf("addr& %x\n",&addr);
   shmtable.sharedmemory[key].refcount++;
   int i = 0;
-  while (proc->shmem[i] != 0 && i<MAXSHMPROC){
+  while (proc->shmem[i] != -1 && i<MAXSHMPROC){
     i++;
   }
+  cprintf("proc->shmem[i]= %d i= %d , key= %d \n",proc->shmem[i],i,key);
   if (i == MAXSHMPROC ){
     release(&shmtable.lock); 
     return -1;
@@ -95,7 +96,7 @@ shm_get(int key, char** addr){
     proc->shmemquantity++;
     mappages(proc->pgdir, (char*)proc->sz+((i+1)*PGSIZE), PGSIZE, v2p(shmtable.sharedmemory[key].addr), PTE_W|PTE_U,PTE_PON); 
     *addr = (char*)proc->sz+((i+1)*PGSIZE);
-    cprintf("addr %x\n",*addr);
+    //cprintf("addr %x\n",*addr);
     release(&shmtable.lock);
     return 0;
   }   
