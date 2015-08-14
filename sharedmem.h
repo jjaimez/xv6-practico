@@ -1,6 +1,7 @@
 struct sharedmemory {
   char* addr;
   int refcount;
+  int size;
 };
 
 struct {

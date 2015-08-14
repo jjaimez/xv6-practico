@@ -13,7 +13,7 @@
 int
 shm_create(int size){
   acquire(&shmtable.lock);
-	if (shmtable.quantity == MAXSHM){
+	if (shmtable.quantity == MAXSHM ){
     release(&shmtable.lock);
     return -1;
   }
@@ -22,7 +22,7 @@ shm_create(int size){
     if (shmtable.sharedmemory[i].refcount == 0){
       shmtable.sharedmemory[i].addr = kalloc();
       memset(shmtable.sharedmemory[i].addr, 0, PGSIZE);
-      shmtable.sharedmemory[i].refcount = 1;
+      shmtable.sharedmemory[i].refcount = 0;
       shmtable.quantity++;
       release(&shmtable.lock);
       return i;
@@ -56,7 +56,7 @@ shm_close(int key){
   }
   shmtable.sharedmemory[key].refcount--;
   proc->shmem[i] = -1;
-  proc->shmemquantity--;
+  proc->shmemquantity--;      
   if (shmtable.sharedmemory[key].refcount == 0)
     shmtable.quantity--;    
   unmappages(proc->pgdir, (char*)proc->sz+((i+1)*PGSIZE), PGSIZE, shmtable.sharedmemory[key].refcount);     
@@ -75,28 +75,27 @@ Retorno: -1 en caso de error ( key inválida).*/
 int
 shm_get(int key, char** addr){
   acquire(&shmtable.lock);
-  if (shmtable.sharedmemory[key].refcount == 0 || key < 0 || key > MAXSHM || shmtable.sharedmemory[key].refcount==MAXSHMPROC ){
+  if ( key < 0 || key > MAXSHM || shmtable.sharedmemory[key].refcount==MAXSHMPROC ){
     release(&shmtable.lock); 
     return -1;
   }  
   //cprintf("addr %x \n" ,addr);
   //cprintf("addr* %x\n",*addr);
   //cprintf("addr& %x\n",&addr);
-  shmtable.sharedmemory[key].refcount++;
   int i = 0;
   while (proc->shmem[i] != -1 && i<MAXSHMPROC){
     i++;
   }
-  cprintf("proc->shmem[i]= %d i= %d , key= %d \n",proc->shmem[i],i,key);
   if (i == MAXSHMPROC ){
     release(&shmtable.lock); 
     return -1;
   } else {
+    shmtable.sharedmemory[key].refcount++;
     proc->shmem[i]=key;
     proc->shmemquantity++;
     mappages(proc->pgdir, (char*)proc->sz+((i+1)*PGSIZE), PGSIZE, v2p(shmtable.sharedmemory[key].addr), PTE_W|PTE_U,PTE_PON); 
     *addr = (char*)proc->sz+((i+1)*PGSIZE);
-    //cprintf("addr %x\n",*addr);
+    cprintf("addr %x\n",*addr);
     release(&shmtable.lock);
     return 0;
   }   
