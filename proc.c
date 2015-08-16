@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "sharedmem.h"
 
 struct {
   struct spinlock lock;
@@ -212,7 +213,8 @@ fork(void)
   for (i = 0; i < MAXSHMPROC; i++){
     np->shmem[i] = -1;
   }
-
+    
+  np->lastaddr = (char*)PGROUNDDOWN(np->sz + PGSIZE);
   // lock to force the compiler to emit the np->state write last.
   acquire(&ptable.lock);
   np->state = RUNNABLE;
@@ -257,7 +259,7 @@ exit(void)
 
   //release all the sharedmem.
   for(i = 0; i < MAXSHMPROC; i++){
-    if (proc->shmem[i] != -1)   
+    if (proc->shmem[i] != -1) 
       shm_close(proc->shmem[i]);
   }
   proc->shmemquantity = 0;

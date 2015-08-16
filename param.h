@@ -20,3 +20,4 @@
 #define PTE_POFF    0  // bit p off
 #define MAXSHM      20  // maximum quantity of spaces of shared memory in system
 #define MAXSHMPROC  20  // maximum quantity of spaces of shared memory per process
+#define	MAXPAGESHM  5 //maximum quantity of pages per shared memory  

@@ -13,7 +13,7 @@
 int
 sys_shm_create(void){
   int size;
-  if(argint(0, &size) < 0)
+  if(argint(0, &size) < 0 && (size > 0) )
     return -1;
   int k = shm_create(size);
   return k;
