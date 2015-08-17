@@ -1,12 +1,10 @@
 ---------------------------------------------------------------
 -----------------Materia: Sistemas Operativos------------------
 ----Grupo: Jacinto Jaimez, Nicolas Pereyra, Adrián Galfioni----
-------------------Fecha de entrega: 24/06/15-------------------
--------------------------Proyecto 5----------------------------
+----------------------Proyecto Final---------------------------
 ---------------------------------------------------------------
 
 Instrucciones de uso:
 
-1: Ingresar a la carpeta xv6-unrc
-2: Ejecutar el comando 'make qemu'
-3: Dentro de qemu, ejecutar comando 'date 12 12 12 12' para setear la hora del rtc y 'date' para ver la hora del rtc.
+Para ejecutar el programa de productor consumidor implementado con espacio de memoria compartido como buffer correr el programa 'prodconmem'.
+Para ejecutar un programa que pone a prueba los espacios de memoria compartida con mas de una pagina correr el programa 'testsharedmemory'.  
