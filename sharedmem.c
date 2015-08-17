@@ -99,7 +99,6 @@ shm_get(int key, char** addr){
     int j = 0;
     for (;j<shmtable.sharedmemory[key].size;j++)
       mappages(proc->pgdir, (char*)proc->lastaddr+(j*PGSIZE), PGSIZE, v2p(shmtable.sharedmemory[key].addr[0]), PTE_W|PTE_U,PTE_PON);       
-    
     proc->shmref[i] = (char*)proc->lastaddr;
     *addr = (char*)proc->lastaddr;
     proc->lastaddr = (char*)proc->lastaddr+(j*PGSIZE);   

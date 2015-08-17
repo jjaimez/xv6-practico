@@ -184,6 +184,7 @@ UPROGS=\
 	_recursive\
 	_date\
 	_prodconmem\
+	_testsharedmemory\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

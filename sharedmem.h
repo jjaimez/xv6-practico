@@ -1,7 +1,7 @@
 struct sharedmemory {
-  char* addr[MAXPAGESHM];
-  int refcount;
-  int size;
+  char* addr[MAXPAGESHM]; //shared memory address
+  int refcount; //quantity of references
+  int size; //size required
 };
 
 struct {

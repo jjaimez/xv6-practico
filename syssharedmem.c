@@ -28,10 +28,7 @@ sys_shm_get(void){//int key, void ** addr
   if(argint(0, &k) < 0)
     return -1;
   argint(1,&mem); 
-  if (!shm_get(k,(char**)mem)){
-    //cprintf(" %x\n", mem);
-   // cprintf("solo %x\n", mem);
-   // cprintf("& %x\n", &mem);    
+  if (!shm_get(k,(char**)mem)){ 
     return 0;
   }
   return -1;

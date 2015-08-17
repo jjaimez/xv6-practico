@@ -287,7 +287,6 @@ int unmappages(pde_t *pgdir, void *va, uint size, int freeframes){
       if(pa == 0)
         panic("kfree unmappages");
       if (freeframes == 0){
-
         char *v = p2v(pa);
         kfree (v);
       }
