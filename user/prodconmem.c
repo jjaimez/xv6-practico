@@ -14,8 +14,7 @@ void consumer (int sFactory, int sConsumer, char* memConsumer, int pid){
     semdown(sConsumer);
     semdown(sFactory);
     *memConsumer= ((int)*memConsumer) -1;
-    printf(1," valor en celda=%d consumidor= %d \n",*memConsumer,pid); 
-
+    //printf(1," valor en celda=%d consumidor= %d \n",*memConsumer,pid); 
     i = 0;
     while (i<5000){ //para demorar un poco la escritura y hacerlo más lento
       i++;
@@ -36,7 +35,7 @@ void producer (int sFactory, int sConsumer, char* mem, int pid){
     }
     semdown(sFactory);
     *mem= ((int)*mem)+1;
-    printf(1," valor en celda=%d  productor= %d \n",*mem,pid); 
+  //  printf(1," valor en celda=%d  productor= %d \n",*mem,pid); 
     semup(sFactory);
     semup(sConsumer); 
     j++;
@@ -97,26 +96,34 @@ main(int argc, char *argv[])
 
 int sConsumer,sFactory,pid,n,k; 
 
+
   sFactory= semget(-1,1); //creo los semaforos
   sConsumer= semget(-1,0);
   k = shm_create(1); //creo un espacio de memoria compartido
   char* mem= 0;
   shm_get(k,&mem); //obtengo el espacio en el padre
-  *mem = (int)0; // lo inicio con cero
+  *mem = (int)0; // lo inicio con cero;
+  
 
-//creo otro espacio de memoria
 
-//  int k2 = shm_create(1); //creo un espacio de memoria compartido
- // char* mem2= 0;
-  //shm_get(k2,&mem2); //obtengo el espacio en el padre
-  // *mem2 = (int)17; // lo inicio con cero
+  int k2 = shm_create(5500); //creo un espacio de memoria compartido
+  char* mem2= 0;
+  shm_get(k2,&mem2); //obtengo el espacio en el padre
+   
+
+
+  for (n=0; n<5500; n += sizeof(int)){
+      *(mem2+n) = (int)5;
+  }
+
+
 
 for(n=0; n<N; n++){
     pid = fork(); 
     if(pid == 0){
       char* memH= 0;
       int flag = shm_get(k,&memH);
-      if (flag == 0)
+      if (flag == 0) 
         consumer(sFactory,sConsumer,memH,getpid());
       semfree(sFactory);
       semfree(sConsumer);
@@ -124,13 +131,13 @@ for(n=0; n<N; n++){
         shm_close(k); 
 
       //le seteo lo que tiene mas 5, así veo que no se rompa nada
-      //char* memH2= 0;
-      //int flag2 = shm_get(k2,&memH2);
-      //if (flag2 == 0){
-        //memH2= ((int)*memH2);
-       // printf(1," valor en la segunda celda =%d consumidor= %d \n",*memH2,getpid()); 
-      //  shm_close(k2); 
-     // }
+     /* char* memH2= 0;
+      int flag2 = shm_get(k2,&memH2);
+      if (flag2 == 0){
+        *memH2= ((int)*memH2);
+        printf(1," valor en la segunda celda =%d consumidor= %d \n",*memH2,getpid()); 
+        shm_close(k2); 
+      }*/
 
       exit();
     }       
@@ -143,20 +150,21 @@ for(n=0; n<N; n++){
       char* memH= 0;
       int flag = shm_get(k,&memH);
       if (flag == 0)
-        producer(sFactory,sConsumer,memH,getpid());
+        producer(sFactory,sConsumer,memH,getpid()); 
       semfree(sFactory);
       semfree(sConsumer); 
       if (flag == 0)
         shm_close(k);    
 
       //le seteo lo que tiene menos 5, así veo que no se rompa nada
-   //   char* memH2= 0;
-    //  int flag2 = shm_get(k2,&memH2);
-     // if (flag2 == 0){
-       // *memH2= ((int)*memH2);
-     //   printf(1," valor en la segunda celda =%d productor= %d \n",*memH2,getpid()); 
-      //  shm_close(k2); 
-      //}
+      char* memH2= 0;
+      int flag2 = shm_get(k2,&memH2);
+      if (flag2 == 0){
+       
+          printf(1,"VALOR:  %d \n",*(memH2+5004));
+       
+       shm_close(k2); 
+      }
 
 
       exit();
@@ -170,6 +178,6 @@ for(n=0; n<N; n++){
   semfree(sFactory);
   semfree(sConsumer);
   shm_close(k);
- // shm_close(k2);
+  shm_close(k2);
   exit();
 }

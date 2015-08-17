@@ -65,7 +65,7 @@ shm_close(int key){
   proc->shmemquantity--;      
   if (shmtable.sharedmemory[key].refcount == 0)
     shmtable.quantity--;
-  unmappages(proc->pgdir, proc->shmref[i], (shmtable.sharedmemory[key].size-1)*PGSIZE, shmtable.sharedmemory[key].refcount);     
+  unmappages(proc->pgdir, proc->shmref[i], (shmtable.sharedmemory[key].size)*PGSIZE, shmtable.sharedmemory[key].refcount);     
   release(&shmtable.lock);
   return 0;  
 }
@@ -96,10 +96,10 @@ shm_get(int key, char** addr){
     shmtable.sharedmemory[key].refcount++;
     proc->shmem[i]=key;
     proc->shmemquantity++;
-    int j=0;
-    for (;j<shmtable.sharedmemory[i].size;j++){
-      mappages(proc->pgdir, (char*)proc->lastaddr+(j*PGSIZE), PGSIZE, v2p(shmtable.sharedmemory[key].addr[j]), PTE_W|PTE_U,PTE_PON);       
-    }   
+    int j = 0;
+    for (;j<shmtable.sharedmemory[key].size;j++)
+      mappages(proc->pgdir, (char*)proc->lastaddr+(j*PGSIZE), PGSIZE, v2p(shmtable.sharedmemory[key].addr[0]), PTE_W|PTE_U,PTE_PON);       
+    
     proc->shmref[i] = (char*)proc->lastaddr;
     *addr = (char*)proc->lastaddr;
     proc->lastaddr = (char*)proc->lastaddr+(j*PGSIZE);   
