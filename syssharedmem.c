@@ -9,9 +9,10 @@
 #include "sharedmem.h"
 #include "elf.h"
 
-
+//Creates a shared memory block.
 int
-sys_shm_create(void){
+sys_shm_create(void)
+{
   int size;
   if(argint(0, &size) < 0 && (size > 0) )
     return -1;
@@ -19,8 +20,10 @@ sys_shm_create(void){
   return k;
 }
 
+//Obtains the address of the memory block associated with key.
 int
-sys_shm_get(void){//int key, void ** addr
+sys_shm_get(void)
+{
   int k;
   int mem = 0;  
   if (proc->shmemquantity >= MAXSHMPROC)
@@ -34,8 +37,10 @@ sys_shm_get(void){//int key, void ** addr
   return -1;
 }
 
+//Frees the memory block previously obtained.
 int
-sys_shm_close(void){
+sys_shm_close(void)
+{
   int k;
   if(argint(0, &k) < 0)
     return -1;

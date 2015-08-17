@@ -274,7 +274,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 }
 
 //unmap the range [va, va + size] logical address of a process.
-// if freeframes free the momory.
+// if freeframes is zero, free the momory.
 int unmappages(pde_t *pgdir, void *va, uint size, int freeframes){
   pte_t *pte;
   uint a, pa;

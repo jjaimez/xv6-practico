@@ -9,10 +9,10 @@
 #include "sharedmem.h"
 
 
-// size tamaño del bloque de memoria requerido.
-//Retorno: Identicador del bloque creado ( key ≥ 0 )
+//Creates a shared memory block.
 int
-shm_create(int size){
+shm_create(int size)
+{
   acquire(&shmtable.lock);
 	if (shmtable.quantity == MAXSHM || ((((int) (size-1) / PGSIZE) ) +1 > MAXPAGESHM) ){
     release(&shmtable.lock);
@@ -40,13 +40,10 @@ shm_create(int size){
 
 }
 
-/*Descripción: Libera el bloque de memoria obtenido previa-
-mente.
-Parámetros: key es el identicador (descriptor) del bloque de
-memoria a liberar.
-Retorno: -1 en caso de error ( key inválida). Cero en otro caso.*/
+//Obtains the address of the memory block associated with key.
 int
-shm_close(int key){
+shm_close(int key)
+{
   acquire(&shmtable.lock);  
 	if ( key < 0 || key > MAXSHM || shmtable.sharedmemory[key].refcount == 0){
     release(&shmtable.lock);
@@ -70,16 +67,10 @@ shm_close(int key){
   return 0;  
 }
 
-/*Descripción: Obtiene la dirección (en el parámetro de salida
-addr ) del bloque de memoria asociado a key .
-Parámetros:
-◦ key es el identicador (descriptor) del bloque de memoria.
-◦ addr es la dirección de un puntero en donde se almacena
-la dirección del bloque de memoria (dirección lógica del
-proceso).
-Retorno: -1 en caso de error ( key inválida).*/
+//Frees the memory block previously obtained.
 int
-shm_get(int key, char** addr){
+shm_get(int key, char** addr)
+{
   acquire(&shmtable.lock);
   if ( key < 0 || key > MAXSHM || shmtable.sharedmemory[key].refcount==MAXSHMPROC ){
     release(&shmtable.lock); 
